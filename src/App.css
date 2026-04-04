@@ -1,0 +1,11 @@
+/* App-specific styles - most styles are in index.css */
+/* This file intentionally minimal - global design system handles everything */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
