@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 const ParticleBackground = () => {
@@ -62,7 +62,7 @@ const ParticleBackground = () => {
       size: 1.5,
       vertexColors: true,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.35, // CRITICAL FIX: reduced from 0.6
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
     });
@@ -81,7 +81,7 @@ const ParticleBackground = () => {
     const lineMaterial = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
     });
 
@@ -114,7 +114,6 @@ const ParticleBackground = () => {
         posArr[i * 3 + 1] += velocities[i].y;
         posArr[i * 3 + 2] += velocities[i].z;
 
-        // Wrap around
         if (posArr[i * 3] > 50) posArr[i * 3] = -50;
         if (posArr[i * 3] < -50) posArr[i * 3] = 50;
         if (posArr[i * 3 + 1] > 50) posArr[i * 3 + 1] = -50;
@@ -158,7 +157,6 @@ const ParticleBackground = () => {
           }
         }
       }
-      // Zero out remaining lines
       for (let i = lineIdx; i < maxLines; i++) {
         lPos[i * 6] = 0; lPos[i * 6 + 1] = 0; lPos[i * 6 + 2] = 0;
         lPos[i * 6 + 3] = 0; lPos[i * 6 + 4] = 0; lPos[i * 6 + 5] = 0;

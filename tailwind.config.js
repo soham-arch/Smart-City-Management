@@ -8,11 +8,11 @@ export default {
     extend: {
       colors: {
         city: {
-          bg: '#07070c',
+          bg: '#ffffff',
           dark: '#0d0d15',
           panel: '#111120',
           border: '#1a1a2e',
-          neon: '#39ff8f',
+          neon: 'var(--city-neon, #39ff8f)',
           blue: '#3d8fff',
           danger: '#ff2d55',
           warning: '#ffb800',
@@ -21,8 +21,8 @@ export default {
         }
       },
       fontFamily: {
-        display: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        heading: ['"Space Grotesk"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       animation: {
         'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
@@ -33,16 +33,16 @@ export default {
       },
       keyframes: {
         pulseNeon: {
-          '0%, 100%': { boxShadow: '0 0 5px #39ff8f, 0 0 20px #39ff8f40' },
-          '50%': { boxShadow: '0 0 20px #39ff8f, 0 0 60px #39ff8f60' },
+          '0%, 100%': { boxShadow: '0 0 5px var(--city-neon, #39ff8f), 0 0 20px color-mix(in sRGB, var(--city-neon, #39ff8f) 25%, transparent)' },
+          '50%': { boxShadow: '0 0 20px var(--city-neon, #39ff8f), 0 0 60px color-mix(in sRGB, var(--city-neon, #39ff8f) 38%, transparent)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },
         },
         glow: {
-          '0%': { textShadow: '0 0 10px #39ff8f40' },
-          '100%': { textShadow: '0 0 20px #39ff8f80, 0 0 40px #39ff8f40' },
+          '0%': { textShadow: '0 0 10px color-mix(in sRGB, var(--city-neon, #39ff8f) 25%, transparent)' },
+          '100%': { textShadow: '0 0 20px color-mix(in sRGB, var(--city-neon, #39ff8f) 50%, transparent), 0 0 40px color-mix(in sRGB, var(--city-neon, #39ff8f) 25%, transparent)' },
         },
         scan: {
           '0%': { transform: 'translateY(-100%)' },

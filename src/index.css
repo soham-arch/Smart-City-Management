@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-
 /* ═══════════════════════════════════════════
    GLOBAL RESET & BASE STYLES
    ═══════════════════════════════════════════ */
@@ -12,7 +10,7 @@
   --dark: #0d0d15;
   --panel: #111120;
   --border: #1a1a2e;
-  --neon: #39ff8f;
+  --city-neon: #39ff8f;
   --blue: #3d8fff;
   --danger: #ff2d55;
   --warning: #ffb800;
@@ -32,12 +30,16 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  background-color: white;
+  color: rgba(0, 0, 0, 0.9);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 /* ═══════════════════════════════════════════
@@ -57,50 +59,54 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon);
+  background: var(--city-neon);
 }
 
 /* ═══════════════════════════════════════════
-   GLASSMORPHISM UTILITIES
+   GLASSMORPHISM UTILITIES (exact spec)
    ═══════════════════════════════════════════ */
 @layer components {
   .glass-panel {
-    background: rgba(17, 17, 32, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(57, 255, 143, 0.1);
+    background: rgba(10, 10, 30, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   .glass-panel-blue {
-    background: rgba(61, 143, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 30, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(61, 143, 255, 0.15);
     border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   .glass-panel-danger {
-    background: rgba(255, 45, 85, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 30, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 45, 85, 0.15);
     border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   .glass-panel-warning {
-    background: rgba(255, 184, 0, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 30, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 184, 0, 0.15);
     border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   /* ═══════════════════════════════════════════
      NEON TEXT EFFECTS
      ═══════════════════════════════════════════ */
   .neon-text {
-    color: var(--neon);
+    color: var(--city-neon);
     text-shadow: 0 0 10px rgba(57, 255, 143, 0.5),
                  0 0 40px rgba(57, 255, 143, 0.2);
   }
@@ -163,11 +169,11 @@ body {
      INPUT STYLES 
      ═══════════════════════════════════════════ */
   .input-field {
-    background: rgba(17, 17, 32, 0.8);
+    background: rgba(10, 10, 30, 0.8);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 16px;
-    color: var(--text);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
     transition: all 0.3s ease;
@@ -176,7 +182,7 @@ body {
 
   .input-field:focus {
     outline: none;
-    border-color: var(--neon);
+    border-color: var(--city-neon);
     box-shadow: 0 0 10px rgba(57, 255, 143, 0.2);
   }
 
@@ -204,7 +210,7 @@ body {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--neon);
+    background: var(--city-neon);
     cursor: pointer;
     box-shadow: 0 0 10px rgba(57, 255, 143, 0.5);
     transition: all 0.2s ease;
@@ -228,6 +234,21 @@ body {
   .slider-warning::-webkit-slider-thumb {
     background: var(--warning);
     box-shadow: 0 0 10px rgba(255, 184, 0, 0.5);
+  }
+
+  /* ═══════════════════════════════════════════
+     TEXT CONTRAST HELPERS
+     ═══════════════════════════════════════════ */
+  .text-body {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .text-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .text-dim {
+    color: rgba(255, 255, 255, 0.45);
   }
 }
 
@@ -288,3 +309,13 @@ body {
 .animate-fire-spread {
   animation: fireSpread 2s ease-out infinite;
 }
+
+/* ═══════════════════════════════════════════
+   PAGE-SPECIFIC THEME OVERRIDES
+   ═══════════════════════════════════════════ */
+.theme-landing { --city-neon: #39ff8f; }
+.theme-ambulance { --city-neon: #3d8fff; }
+.theme-police { --city-neon: #ff2d55; }
+.theme-fire { --city-neon: #ffb800; }
+.theme-dashboard { --city-neon: #39ff8f; }
+.theme-simulation { --city-neon: #39ff8f; }
