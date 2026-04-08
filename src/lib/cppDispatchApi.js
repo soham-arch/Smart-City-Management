@@ -1,3 +1,18 @@
+/**
+ * cppDispatchApi.js — Frontend API client for the C++ dispatch server
+ *
+ * Provides named functions for calling each dispatch endpoint on the Express backend.
+ * All functions return Promises that resolve to JSON responses from the server.
+ *
+ * Functions:
+ *   requestAmbulanceDispatch(payload)  → POST /api/ambulance-dispatch
+ *   requestFireDispatch(payload)       → POST /api/fire-dispatch
+ *   requestPoliceDispatch(payload)     → POST /api/police-dispatch
+ *   requestCrimeQueueInsert(payload)   → POST /api/crime-queue/insert
+ *   fetchCrimeQueue()                  → GET  /api/crime-queue
+ *   resolveCrime(crimeId, edges)       → POST /api/crime-queue/resolve/:id
+ *   fetchCrimeTypes()                  → GET  /api/crime-types
+ */
 const API_BASE_URL = import.meta.env.VITE_CPP_API_URL || 'http://localhost:3001';
 
 async function postJson(path, payload) {

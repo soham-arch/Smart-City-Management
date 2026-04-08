@@ -1,6 +1,17 @@
-// Pune road network edges with distances
-// Each edge connects two map_node IDs with a distance in km
-
+/**
+ * puneEdges.js — City Road Network Edge Definitions
+ *
+ * Defines all weighted edges (roads) between nodes in the Pune city graph.
+ * Each edge: { from, to, distance_km, road }
+ *
+ * These edges form the adjacency list used by:
+ *   - C++ Dijkstra binary for shortest path computation
+ *   - Client-side Dijkstra preview (buildGraph + dijkstra functions below)
+ *   - NodeMap component for rendering road connections
+ *
+ * Edge categories: Road edges, Police station edges, Fire station edges
+ * All edges are bidirectional (undirected graph).
+ */
 export const puneEdges = [
   { from: 'bhugaon', to: 'bavdhan', distance_km: 2.1, road: 'Bhugaon-Bavdhan Rd' },
   { from: 'bavdhan', to: 'mumbai_highway', distance_km: 3.4, road: 'Mumbai-Bangalore Hwy' },

@@ -1,3 +1,19 @@
+/**
+ * PolicePage.jsx — Police Dispatch / Crime Report System
+ *
+ * 5-step crime reporting and dispatch workflow:
+ *   Step 0: Crime report form (type, location, severity, casualties toggle)
+ *   Step 1: Priority Queue visualization (max-heap tree + sorted queue table)
+ *   Step 2: Unit assignment + Dijkstra shortest path animation
+ *   Step 3: Linked ambulance dispatch (if casualties reported)
+ *   Step 4: Active dispatch board (pending/active/resolved queues)
+ *
+ * Backend calls:
+ *   POST /api/police-dispatch → C++ priority queue + Dijkstra + optional ambulance
+ *   POST /api/crime-queue/resolve/:id → resolves crime + frees patrol units
+ *
+ * C++ algorithms used: Max-Heap Priority Queue, Dijkstra, Knapsack, Merge Sort
+ */
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPanel from '../components/GlassPanel';

@@ -1,3 +1,19 @@
+/**
+ * useCityStats.js — Aggregated city-wide statistics hook
+ *
+ * Polls all 7 database tables in parallel every 3 seconds and computes:
+ *   - activeIncidents (dispatched/en_route incidents + active crimes)
+ *   - unitsDeployed (ambulance, police, fire active units)
+ *   - bedsAvailable / icuBedsAvailable (from hospitals table)
+ *   - totalPatients (non-discharged patients)
+ *   - avgResponseTime (from response_time_seconds fields)
+ *   - systemStatus ('all_clear' | 'active_emergency' | 'critical')
+ *   - activeCrimes / resolvedCrimes (from crime_queue)
+ *   - station/hospital counts
+ *
+ * Used by: LandingPage (hero stats), DashboardPage (overview grid)
+ * Crash-safe: all errors are caught, defaults returned on failure
+ */
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_CPP_API_URL || 'http://localhost:3001';

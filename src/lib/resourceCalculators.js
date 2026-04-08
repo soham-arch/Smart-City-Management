@@ -1,3 +1,18 @@
+/**
+ * resourceCalculators.js — JS fallback resource computation
+ *
+ * Provides fire and police resource calculations used as a frontend fallback
+ * when the C++ fire_resource_calc binary result is not available.
+ *
+ * Functions:
+ *   computeFireResources(intensity, buildingType)
+ *     → { trucks, firefighters, tankers, spreadRadius }
+ *   computePoliceResources(severity, crowdSize)
+ *     → { vehicles, officers, backup }
+ *
+ * Note: The primary computation now runs in C++ (fire_resource_calc.cpp).
+ * This file exists for backward compatibility with FirePage.jsx.
+ */
 export function computeFireResources(intensity, buildingType) {
   let trucks;
   let firefighters;

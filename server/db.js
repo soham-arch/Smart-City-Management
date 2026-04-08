@@ -1,4 +1,29 @@
-/* eslint-env node */
+/**
+ * db.js — JSONL File-Based Database Engine
+ *
+ * This module provides a simple database layer using JSONL (JSON Lines) text files.
+ * Each "table" is a .txt file in the server/db/ directory where each line = one JSON row.
+ *
+ * TABLES (auto-created on startup):
+ *   hospitals.txt       — Hospital records (beds, ICU, ambulances)
+ *   incidents.txt       — Dispatch incidents (ambulance, fire, police)
+ *   patients.txt        — Patient records (ward, severity, healing status)
+ *   wards.txt           — Ward knapsack snapshots (ICU allocation results)
+ *   police_stations.txt — Police station data
+ *   patrol_units.txt    — Individual patrol unit assignments
+ *   crime_queue.txt     — Crime priority queue entries
+ *   crime_incidents.txt — Resolved crime incident history
+ *   fire_stations.txt   — Fire station data
+ *
+ * Each row gets an auto-generated ID (timestamp + random) and created_at timestamp.
+ *
+ * FUNCTIONS:
+ *   readTable(name)         — Read all rows from a table as an array
+ *   writeTable(name, rows)  — Overwrite entire table with new rows
+ *   insertRow(name, obj)    — Append a new row with auto-ID
+ *   updateRow(name, id, patch) — Merge fields into an existing row
+ *   deleteRow(name, id)     — Remove a row by ID
+ */
 const fs = require('fs');
 const path = require('path');
 
@@ -10,7 +35,7 @@ if (!fs.existsSync(DB_DIR)) {
 }
 
 // Ensure all table files exist
-const TABLES = ['hospitals', 'incidents', 'patients', 'wards', 'police_stations', 'patrol_units', 'crime_queue', 'crime_incidents'];
+const TABLES = ['hospitals', 'incidents', 'patients', 'wards', 'police_stations', 'patrol_units', 'crime_queue', 'crime_incidents', 'fire_stations'];
 TABLES.forEach((table) => {
   const filePath = path.join(DB_DIR, `${table}.txt`);
   if (!fs.existsSync(filePath)) {

@@ -1,3 +1,16 @@
+/*
+ * knapsack.cpp — 0/1 Knapsack Dynamic Programming (C++ Binary)
+ *
+ * Selects the optimal subset of hospitals/stations that maximize value
+ * (beds, resources) while staying within a weight budget (distance).
+ *
+ * Input (stdin):  Line 1: <capacity>
+ *                 Line 2+: id\tname\tweight\tvalue (tab-separated, one item per line)
+ * Output (stdout): JSON with selected_ids, total_value, total_weight, dp_table
+ *
+ * Algorithm: Classic 0/1 Knapsack DP with backtracking — O(n * capacity)
+ * Compiled to: server/bin/native_knapsack.exe
+ */
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>

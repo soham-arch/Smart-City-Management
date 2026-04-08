@@ -1,4 +1,49 @@
-/* eslint-env node */
+/**
+ * cppServer.js — NEXUS Smart City Backend Server
+ *
+ * This is the main Express.js HTTP server that powers the NEXUS Smart City
+ * Emergency Management System. It acts as a thin orchestration layer:
+ *
+ * WHAT IT DOES:
+ *   1. Exposes REST API endpoints for ambulance, police, and fire dispatch
+ *   2. Calls native C++ binaries for ALL algorithmic computations:
+ *      - Dijkstra's algorithm (shortest path routing)
+ *      - 0/1 Knapsack (hospital resource allocation)
+ *      - Merge Sort (distance-based sorting)
+ *      - Priority Queue (emergency triage scoring)
+ *      - Ward Knapsack (ICU vs General ward assignment)
+ *      - Crime Priority Queue (max-heap for crime severity ranking)
+ *      - Bed Manager (hospital bed counting — 1 patient = 1 bed)
+ *      - Hospital Selector (best hospital selection via scoring)
+ *      - Fire Resource Calculator (trucks/firefighters needed)
+ *   3. Reads/writes a JSONL-based file database (server/db/*.txt)
+ *   4. Seeds hospital data on first startup
+ *
+ * WHAT IT DOES NOT DO:
+ *   - No algorithmic logic lives here — all computations are in C++ binaries
+ *   - No Supabase / external DB — everything is local file-based
+ *
+ * API ENDPOINTS:
+ *   POST /api/ambulance-dispatch  — Dispatch ambulance to incident
+ *   POST /api/fire-dispatch       — Dispatch fire resources
+ *   POST /api/police-dispatch     — Dispatch police + optional ambulance
+ *   POST /api/ward-knapsack       — ICU rebalance for a hospital
+ *   POST /api/healing-tick        — Simulate patient healing + discharge
+ *   POST /api/crime-queue/insert  — Add crime to priority queue
+ *   POST /api/crime-queue/resolve/:id — Resolve a crime
+ *   GET  /api/crime-queue         — Get all crimes sorted by priority
+ *   GET  /api/db/:table           — Read any database table
+ *   POST /api/db/:table           — Insert row into table
+ *   PATCH /api/db/:table/:id      — Update row in table
+ *   GET  /api/injury-types        — Get injury type lookup table
+ *   GET  /api/cpp-status          — Check which C++ binaries are available
+ *   GET  /api/health              — Health check
+ *
+ * DEPENDENCIES:
+ *   - express, cors, child_process (spawnSync)
+ *   - ./db.js (JSONL file database helper)
+ *   - C++ binaries in server/bin/ (compiled from cpp/native/*.cpp)
+ */
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -20,6 +65,9 @@ const CPP_BINARIES = {
   priority: path.join(BIN_DIR, 'native_priority.exe'),
   ward_knapsack: path.join(BIN_DIR, 'native_ward_knapsack.exe'),
   crime_priority_queue: path.join(BIN_DIR, 'native_crime_priority_queue.exe'),
+  bed_manager: path.join(BIN_DIR, 'native_bed_manager.exe'),
+  hospital_selector: path.join(BIN_DIR, 'native_hospital_selector.exe'),
+  fire_resource_calc: path.join(BIN_DIR, 'native_fire_resource_calc.exe'),
 };
 
 // ─── Injury Type Table ───────────────────────────────────────────────
@@ -30,18 +78,20 @@ const INJURY_TYPES = {
   accident: { healing_days: 5,  resource_weight: 2, initial_severity_bonus: 2 },
   other:    { healing_days: 3,  resource_weight: 1, initial_severity_bonus: 0 },
 };
-// ─── Hospital Seed Data ──────────────────────────────────────────────
+// ─── Hospital Seed Data (Small counts for easy testing) ─────────────
+// beds_total: 10-20 general beds | icu_beds_total: 5-10 ICU beds | ambulances: 2-3
+// beds_available = beds_total on fresh seed (no patients admitted yet)
 const HOSPITAL_SEED = [
-  { name: 'Ruby Hall Clinic', location: 'Shivajinagar', map_node_id: 'ruby_hall', beds_total: 650, beds_available: 650, icu_beds_total: 40, icu_beds_available: 40, ambulances_stationed: 6, ambulances_available: 6 },
-  { name: 'KEM Hospital', location: 'Rasta Peth', map_node_id: 'kem_hospital', beds_total: 1200, beds_available: 1200, icu_beds_total: 80, icu_beds_available: 80, ambulances_stationed: 8, ambulances_available: 8 },
-  { name: 'Sahyadri Hospital Kothrud', location: 'Kothrud', map_node_id: 'sahyadri_kothrud', beds_total: 350, beds_available: 350, icu_beds_total: 28, icu_beds_available: 28, ambulances_stationed: 4, ambulances_available: 4 },
-  { name: 'Deenanath Mangeshkar Hospital', location: 'Erandwane', map_node_id: 'deenanath', beds_total: 750, beds_available: 750, icu_beds_total: 60, icu_beds_available: 60, ambulances_stationed: 7, ambulances_available: 7 },
-  { name: 'Jupiter Hospital', location: 'Baner', map_node_id: 'jupiter_baner', beds_total: 300, beds_available: 300, icu_beds_total: 20, icu_beds_available: 20, ambulances_stationed: 3, ambulances_available: 3 },
-  { name: 'Poona Hospital', location: 'Sadashiv Peth', map_node_id: 'poona_hospital', beds_total: 400, beds_available: 400, icu_beds_total: 25, icu_beds_available: 25, ambulances_stationed: 3, ambulances_available: 3 },
-  { name: 'Jehangir Hospital', location: 'Camp', map_node_id: 'jehangir', beds_total: 500, beds_available: 500, icu_beds_total: 35, icu_beds_available: 35, ambulances_stationed: 5, ambulances_available: 5 },
-  { name: 'Noble Hospital', location: 'Hadapsar', map_node_id: 'noble_hadapsar', beds_total: 280, beds_available: 280, icu_beds_total: 18, icu_beds_available: 18, ambulances_stationed: 2, ambulances_available: 2 },
-  { name: 'Aditya Birla Hospital', location: 'Wakad', map_node_id: 'aditya_birla', beds_total: 450, beds_available: 450, icu_beds_total: 30, icu_beds_available: 30, ambulances_stationed: 4, ambulances_available: 4 },
-  { name: 'Symbiosis Hospital', location: 'Lavale', map_node_id: 'symbiosis_hospital', beds_total: 200, beds_available: 200, icu_beds_total: 15, icu_beds_available: 15, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Ruby Hall Clinic', location: 'Shivajinagar', map_node_id: 'ruby_hall', beds_total: 18, beds_available: 18, icu_beds_total: 8, icu_beds_available: 8, ambulances_stationed: 3, ambulances_available: 3 },
+  { name: 'KEM Hospital', location: 'Rasta Peth', map_node_id: 'kem_hospital', beds_total: 20, beds_available: 20, icu_beds_total: 10, icu_beds_available: 10, ambulances_stationed: 3, ambulances_available: 3 },
+  { name: 'Sahyadri Hospital Kothrud', location: 'Kothrud', map_node_id: 'sahyadri_kothrud', beds_total: 14, beds_available: 14, icu_beds_total: 6, icu_beds_available: 6, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Deenanath Mangeshkar Hospital', location: 'Erandwane', map_node_id: 'deenanath', beds_total: 16, beds_available: 16, icu_beds_total: 8, icu_beds_available: 8, ambulances_stationed: 3, ambulances_available: 3 },
+  { name: 'Jupiter Hospital', location: 'Baner', map_node_id: 'jupiter_baner', beds_total: 12, beds_available: 12, icu_beds_total: 5, icu_beds_available: 5, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Poona Hospital', location: 'Sadashiv Peth', map_node_id: 'poona_hospital', beds_total: 15, beds_available: 15, icu_beds_total: 6, icu_beds_available: 6, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Jehangir Hospital', location: 'Camp', map_node_id: 'jehangir', beds_total: 16, beds_available: 16, icu_beds_total: 7, icu_beds_available: 7, ambulances_stationed: 3, ambulances_available: 3 },
+  { name: 'Noble Hospital', location: 'Hadapsar', map_node_id: 'noble_hadapsar', beds_total: 10, beds_available: 10, icu_beds_total: 5, icu_beds_available: 5, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Aditya Birla Hospital', location: 'Wakad', map_node_id: 'aditya_birla', beds_total: 14, beds_available: 14, icu_beds_total: 6, icu_beds_available: 6, ambulances_stationed: 2, ambulances_available: 2 },
+  { name: 'Symbiosis Hospital', location: 'Lavale', map_node_id: 'symbiosis_hospital', beds_total: 10, beds_available: 10, icu_beds_total: 5, icu_beds_available: 5, ambulances_stationed: 2, ambulances_available: 2 },
 ];
 
 // ─── Seed hospitals on startup if empty ──────────────────────────────
@@ -430,52 +480,142 @@ function runWardKnapsack(patients, resourceCapacity) {
   }
 }
 
-function selectBestKnapsackItem(items, selectedIds) {
-  const selectedSet = new Set(selectedIds);
-  const pool = items.filter((item) => selectedSet.has(item.id));
-  const candidates = pool.length > 0 ? pool : items;
+// ─── C++ Bed Manager ─────────────────────────────────────────────────
+// Ensures 1 patient = exactly 1 bed consumed
 
-  // Use distance-weighted composite score: value / distance ratio
-  // This ensures nearby hospitals with good resources are preferred
-  // over distant high-capacity ones (fixes KEM-always-selected bug)
-  return [...candidates].sort((a, b) => {
-    const scoreA = a.value / Math.max(a.distance, 0.1);
-    const scoreB = b.value / Math.max(b.distance, 0.1);
-    if (Math.abs(scoreB - scoreA) > 0.01) return scoreB - scoreA;
-    return a.distance - b.distance; // tiebreaker: closer first
-  })[0] ?? null;
+function runBedManager(action, hospital, ward, patientCount) {
+  const payload = [
+    sanitizeField(action),
+    String(hospital.beds_total || 0),
+    String(hospital.beds_available || 0),
+    String(hospital.icu_beds_total || 0),
+    String(hospital.icu_beds_available || 0),
+    sanitizeField(ward),
+    String(patientCount || 1),
+  ].join('\t');
+
+  try {
+    return { ...runCppBinary('bed_manager', payload), engine: 'cpp' };
+  } catch (error) {
+    // JS fallback — simple 1-bed-per-patient logic
+    let bedsAvail = hospital.beds_available || 0;
+    let icuBedsAvail = hospital.icu_beds_available || 0;
+    let bedsChanged = 0;
+    let icuBedsChanged = 0;
+
+    if (action === 'admit') {
+      if (ward === 'icu') {
+        icuBedsChanged = -patientCount;
+        icuBedsAvail = Math.max(0, icuBedsAvail - patientCount);
+      }
+      bedsChanged = -patientCount;
+      bedsAvail = Math.max(0, bedsAvail - patientCount);
+    } else if (action === 'discharge') {
+      if (ward === 'icu') {
+        icuBedsChanged = patientCount;
+        icuBedsAvail = Math.min(hospital.icu_beds_total || 0, icuBedsAvail + patientCount);
+      }
+      bedsChanged = patientCount;
+      bedsAvail = Math.min(hospital.beds_total || 0, bedsAvail + patientCount);
+    }
+
+    return {
+      beds_available: bedsAvail,
+      icu_beds_available: icuBedsAvail,
+      beds_changed: bedsChanged,
+      icu_beds_changed: icuBedsChanged,
+      engine: 'js-fallback',
+      warning: error.message,
+    };
+  }
 }
 
+function runBedManagerCount(hospital, icuPatientCount, generalPatientCount) {
+  const payload = [
+    'count',
+    String(hospital.beds_total || 0),
+    String(hospital.icu_beds_total || 0),
+    String(icuPatientCount),
+    String(generalPatientCount),
+  ].join('\t');
+
+  try {
+    return { ...runCppBinary('bed_manager', payload), engine: 'cpp' };
+  } catch (error) {
+    // JS fallback
+    return {
+      beds_available: Math.max(0, (hospital.beds_total || 0) - icuPatientCount - generalPatientCount),
+      icu_beds_available: Math.max(0, (hospital.icu_beds_total || 0) - icuPatientCount),
+      beds_changed: 0,
+      icu_beds_changed: 0,
+      engine: 'js-fallback',
+      warning: error.message,
+    };
+  }
+}
+
+// ─── C++ Hospital Selector ───────────────────────────────────────────
+
+function selectBestKnapsackItem(items, selectedIds) {
+  const payload = [
+    String(items.length),
+    (selectedIds && selectedIds.length > 0) ? selectedIds.join(',') : 'none',
+    ...items.map((item) => [
+      sanitizeField(item.id),
+      sanitizeField(item.name || ''),
+      Number(item.distance || 0),
+      Number(item.value || 0),
+      Number(item.beds_available || 0),
+      Number(item.icu_beds_available || 0),
+    ].join('\t')),
+  ].join('\n');
+
+  try {
+    const result = runCppBinary('hospital_selector', payload);
+    // Find the full item from the items array by selected_id
+    const selected = items.find((i) => i.id === result.selected_id);
+    if (selected) {
+      selected._selector_engine = 'cpp';
+      return selected;
+    }
+    // Shouldn't happen, but fallback
+    return items[0] || null;
+  } catch (error) {
+    // JS fallback — same scoring logic
+    const selectedSet = new Set(selectedIds || []);
+    const pool = items.filter((item) => selectedSet.has(item.id));
+    const candidates = pool.length > 0 ? pool : items;
+
+    return [...candidates].sort((a, b) => {
+      const scoreA = a.value / Math.max(a.distance, 0.1);
+      const scoreB = b.value / Math.max(b.distance, 0.1);
+      if (Math.abs(scoreB - scoreA) > 0.01) return scoreB - scoreA;
+      return a.distance - b.distance;
+    })[0] ?? null;
+  }
+}
+
+// ─── C++ Fire Resource Calculator ────────────────────────────────────
+
 function computeFireResources(intensity, buildingType) {
-  let trucks;
-  let firefighters;
-  let tankers;
+  const payload = [String(intensity), sanitizeField(buildingType)].join('\n');
 
-  if (intensity <= 3) {
-    trucks = 1;
-    firefighters = 5;
-    tankers = 1;
-  } else if (intensity <= 6) {
-    trucks = 2;
-    firefighters = 10;
-    tankers = 2;
-  } else if (intensity <= 9) {
-    trucks = 3;
-    firefighters = 15;
-    tankers = 3;
-  } else {
-    trucks = 5;
-    firefighters = 25;
-    tankers = 5;
+  try {
+    return { ...runCppBinary('fire_resource_calc', payload), engine: 'cpp' };
+  } catch (error) {
+    // JS fallback
+    let trucks, firefighters, tankers;
+    if (intensity <= 3) { trucks = 1; firefighters = 5; tankers = 1; }
+    else if (intensity <= 6) { trucks = 2; firefighters = 10; tankers = 2; }
+    else if (intensity <= 9) { trucks = 3; firefighters = 15; tankers = 3; }
+    else { trucks = 5; firefighters = 25; tankers = 5; }
+    if (buildingType === 'industrial' || buildingType === 'commercial') {
+      trucks = Math.ceil(trucks * 1.3);
+      firefighters = Math.ceil(firefighters * 1.2);
+      tankers = Math.ceil(tankers * 1.3);
+    }
+    return { trucks, firefighters, tankers, spreadRadius: intensity * 15, engine: 'js-fallback', warning: error.message };
   }
-
-  if (buildingType === 'industrial' || buildingType === 'commercial') {
-    trucks = Math.ceil(trucks * 1.3);
-    firefighters = Math.ceil(firefighters * 1.2);
-    tankers = Math.ceil(tankers * 1.3);
-  }
-
-  return { trucks, firefighters, tankers, spreadRadius: intensity * 15 };
 }
 
 // ─── Database Polling Endpoint ───────────────────────────────────────
@@ -604,7 +744,7 @@ app.post('/api/ward-knapsack', (req, res) => {
   // Resource capacity = icu_beds_total * 2
   const resourceCapacity = (hospital.icu_beds_total || 16) * 2;
 
-  // Run ward knapsack
+  // Run ward knapsack (C++ binary)
   const result = runWardKnapsack(patients, resourceCapacity);
 
   // Determine evictions (patients previously in ICU but now in general)
@@ -628,29 +768,21 @@ app.post('/api/ward-knapsack', (req, res) => {
   });
   writeTable('patients', updatedPatients);
 
-  // Update hospital bed counts
- const currentPatients = updatedPatients.filter(
-  (p) => (p.hospital_id === hospital_id || p.hospital_id === hospital.map_node_id) && p.status !== 'discharged'
-);
+  // Update hospital bed counts using C++ bed_manager
+  // 1 patient = 1 bed, simple and correct
+  const currentPatients = updatedPatients.filter(
+    (p) => (p.hospital_id === hospital_id || p.hospital_id === hospital.map_node_id) && p.status !== 'discharged'
+  );
 
-// ✅ ICU resource usage (NOT patient count)
-const icuResourceUsed = currentPatients
-  .filter((p) => p.ward === 'icu')
-  .reduce((sum, p) => sum + (p.resource_weight || 1), 0);
+  const icuPatientCount = currentPatients.filter((p) => p.ward === 'icu').length;
+  const generalPatientCount = currentPatients.filter((p) => p.ward === 'general').length;
 
-// Optional: General ward can still be simple count OR also weighted
-const generalCount = currentPatients.filter((p) => p.ward === 'general').length;
-
-// 🔥 Capacity = ICU beds * 2 (same as your knapsack)
-const icuCapacity = (hospital.icu_beds_total || 0) * 2;
-
-updateRow('hospitals', hospital.id, {
-  // Now this reflects REAL usage
-  icu_beds_available: Math.max(0, icuCapacity - icuResourceUsed),
-
-  // Keep general beds simple (or upgrade later)
-  beds_available: Math.max(0, (hospital.beds_total || 0) - generalCount),
-});
+  // Use C++ bed_manager to compute correct available beds
+  const bedResult = runBedManagerCount(hospital, icuPatientCount, generalPatientCount);
+  updateRow('hospitals', hospital.id, {
+    beds_available: bedResult.beds_available,
+    icu_beds_available: bedResult.icu_beds_available,
+  });
 
   // Save ward snapshot
   insertRow('wards', {
@@ -658,7 +790,8 @@ updateRow('hospitals', hospital.id, {
     timestamp: new Date().toISOString(),
     icu_patients: result.icu_admitted,
     general_patients: result.general_ward,
-    icu_resource_used: currentPatients.filter((p) => p.ward === 'icu').reduce((s, p) => s + (p.resource_weight || 1), 0),
+    icu_patient_count: icuPatientCount,
+    general_patient_count: generalPatientCount,
     icu_resource_capacity: resourceCapacity,
     knapsack_total_value: result.total_severity_served,
   });
@@ -704,7 +837,7 @@ app.post('/api/healing-tick', (req, res) => {
 
   writeTable('patients', allPatients);
 
-  // Update bed counts for discharged patients
+  // Update bed counts for discharged patients using C++ bed_manager
   changes.discharged.forEach((pid) => {
     const patient = allPatients.find((p) => p.id === pid);
     if (!patient) return;
@@ -713,13 +846,12 @@ app.post('/api/healing-tick', (req, res) => {
     const hospital = hospitals.find((h) => h.map_node_id === patient.hospital_id || h.id === patient.hospital_id);
     if (!hospital) return;
 
-    const patch = {
-      beds_available: Math.min(hospital.beds_total, (hospital.beds_available || 0) + 1),
-    };
-    if (patient.ward === 'icu') {
-      patch.icu_beds_available = Math.min(hospital.icu_beds_total, (hospital.icu_beds_available || 0) + 1);
-    }
-    updateRow('hospitals', hospital.id, patch);
+    // Use C++ bed_manager for discharge — 1 patient = 1 bed freed
+    const bedResult = runBedManager('discharge', hospital, patient.ward || 'general', 1);
+    updateRow('hospitals', hospital.id, {
+      beds_available: bedResult.beds_available,
+      icu_beds_available: bedResult.icu_beds_available,
+    });
   });
 
   // Re-run ward knapsack for each affected hospital
@@ -1423,16 +1555,12 @@ app.post('/api/police-dispatch', (req, res) => {
             linked_crime_id: crimeRow.id,
           });
 
-          // Decrement hospital beds
+          // Create patient records and decrement beds using C++ bed_manager
+          // Each casualty = 1 bed consumed
           const ward = ambSeverity >= 7 ? 'icu' : 'general';
-          const bedPatch = ward === 'icu'
-            ? { icu_beds_available: Math.max(0, (selectedHospital.icu_beds_available || 1) - 1), beds_available: Math.max(0, (selectedHospital.beds_available || 1) - 1) }
-            : { beds_available: Math.max(0, (selectedHospital.beds_available || 1) - 1) };
-          updateRow('hospitals', selectedHospital.id, bedPatch);
-
-          // Create patient records
           const injuryInfo = INJURY_TYPES[injuryType] || INJURY_TYPES.other;
-          for (let ci = 0; ci < Math.min(casualty_count, 5); ci++) {
+          const actualCasualties = Math.min(casualty_count, 5);
+          for (let ci = 0; ci < actualCasualties; ci++) {
             insertRow('patients', {
               hospital_id: selectedHospital.map_node_id,
               name: `Casualty #${Date.now().toString().slice(-4)}-${ci + 1}`,
@@ -1447,6 +1575,16 @@ app.post('/api/police-dispatch', (req, res) => {
               incident_id: ambIncident.id,
               linked_crime_id: crimeRow.id,
             });
+
+            // Decrement beds: 1 patient = 1 bed via C++ bed_manager
+            const currentHospitalData = readTable('hospitals').find((h) => h.id === selectedHospital.id);
+            if (currentHospitalData) {
+              const bedResult = runBedManager('admit', currentHospitalData, ward, 1);
+              updateRow('hospitals', selectedHospital.id, {
+                beds_available: bedResult.beds_available,
+                icu_beds_available: bedResult.icu_beds_available,
+              });
+            }
           }
 
           // Update crime with linked ambulance ID

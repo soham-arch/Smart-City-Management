@@ -1,3 +1,19 @@
+/**
+ * AmbulancePage.jsx — Ambulance Dispatch Workflow
+ *
+ * Multi-step ambulance dispatch interface:
+ *   Step 1: Select incident location on map + set severity/injury type
+ *   Step 2: C++ processing pipeline animation (Priority → Dijkstra → Knapsack → Sort)
+ *   Step 3: Dispatch result (route, ETA, hospital, algorithm stack)
+ *   Step 4: Patient admission form → creates patient record + runs ward knapsack
+ *
+ * Backend calls:
+ *   POST /api/ambulance-dispatch → runs C++ Dijkstra + Knapsack for route + hospital
+ *   POST /api/db/patients → inserts patient record
+ *   POST /api/ward-knapsack → ICU rebalance after admission
+ *
+ * C++ algorithms used: Dijkstra, 0/1 Knapsack, Merge Sort, Priority Queue
+ */
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPanel from '../components/GlassPanel';

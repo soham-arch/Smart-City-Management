@@ -1,3 +1,17 @@
+/*
+ * ward_knapsack.cpp — ICU Ward Allocation using 0/1 Knapsack (C++ Binary)
+ *
+ * Decides which patients should be in ICU vs General ward based on severity.
+ * Each patient has an effective severity (profit) and resource weight.
+ * ICU capacity = icu_beds_total * 2 resource units.
+ *
+ * Input (stdin):  Line 1: <resource_capacity>
+ *                 Line 2+: id\tinjury_type\tseverity\tward (tab-separated)
+ * Output (stdout): JSON with icu_admitted[], general_ward[], dp_table_snapshot
+ *
+ * Algorithm: 0/1 Knapsack DP with backtracking — O(n * capacity)
+ * Compiled to: server/bin/native_ward_knapsack.exe
+ */
 #include <iostream>
 #include <sstream>
 #include <string>

@@ -1,3 +1,16 @@
+/**
+ * LandingPage.jsx — Home / Hero page
+ *
+ * The first page users see. Contains:
+ *   - Live system status badge (ALL CLEAR / ACTIVE EMERGENCY)
+ *   - Animated hero title with GSAP entrance animations
+ *   - Live stats bar (Active Incidents, Units Deployed, Avg Response, Beds Available)
+ *   - Emergency report cards (Ambulance, Police, Fire) linking to dispatch pages
+ *   - Algorithm badges showing C++ algorithms used
+ *   - Recent Incidents feed (IncidentFeed component) with click-to-expand detail cards
+ *
+ * Data source: useCityStats hook (polls all DB tables every 3s for real-time stats)
+ */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';

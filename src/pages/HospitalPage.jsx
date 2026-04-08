@@ -1,3 +1,17 @@
+/**
+ * HospitalPage.jsx — Hospital Management / Ward Allocation
+ *
+ * Displays all hospitals with real-time bed tracking:
+ *   - Summary stats (total beds, ICU beds, patients, occupancy %)
+ *   - Hospital cards with General/ICU ward progress bars
+ *   - Patient list per hospital (injury type, severity, ward, days admitted)
+ *   - Healing Tick button → simulates patient healing/discharge
+ *   - Rebalance ICU button → runs C++ Ward Knapsack (0/1 Knapsack DP)
+ *   - Knapsack explainer panel with injury type table + DP table snapshot
+ *
+ * Bed model: 1 patient = 1 bed consumed (ICU patients use 1 ICU + 1 total bed)
+ * C++ algorithms used: Ward Knapsack (0/1 Knapsack DP), Bed Manager
+ */
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPanel from '../components/GlassPanel';

@@ -1,3 +1,17 @@
+/*
+ * crime_priority_queue.cpp — Max-Heap Crime Priority Queue (C++ Binary)
+ *
+ * Manages a priority queue of reported crimes using a max-heap.
+ * Priority is computed from: crime type base score + severity + time-since-report bonus.
+ * Tracks heap insertion steps (bubble-up swaps) for frontend visualization.
+ *
+ * Input (stdin):  Line 1: <count>
+ *                 Lines 2+: crime_id\tcrime_type\tseverity\tunits_needed\treported_at_unix
+ * Output (stdout): JSON with sorted_queue[], heap_insertion_steps[], total_pending
+ *
+ * Algorithm: Manual max-heap with bubble-up tracking — O(n log n)
+ * Compiled to: server/bin/native_crime_priority_queue.exe
+ */
 #include <iostream>
 #include <string>
 #include <sstream>

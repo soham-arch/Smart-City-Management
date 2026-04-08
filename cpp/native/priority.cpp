@@ -1,3 +1,15 @@
+/*
+ * priority.cpp — Emergency Priority Score Calculator (C++ Binary)
+ *
+ * Computes a priority score for an incident based on its type and severity.
+ * Fire gets +3 base, ambulance +2, police +1 — ensuring fires are top priority.
+ *
+ * Input (stdin):  type\tseverity (tab-separated, single line)
+ * Output (stdout): JSON { "priority_score": N }
+ *
+ * Algorithm: Simple weighted scoring formula — O(1)
+ * Compiled to: server/bin/native_priority.exe
+ */
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>

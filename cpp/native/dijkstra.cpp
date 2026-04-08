@@ -1,3 +1,16 @@
+/*
+ * dijkstra.cpp — Dijkstra's Shortest Path Algorithm (C++ Binary)
+ *
+ * Computes shortest paths from a source node to all other nodes in a weighted graph.
+ * Used for: ambulance routing, police station routing, fire station routing.
+ *
+ * Input (stdin):  Tab-separated edge list: source\tdest\tweight (one per line)
+ *                 Last line: "SOURCE\t<source_node_id>"
+ * Output (stdout): JSON with distances, previous nodes, and step-by-step trace
+ *
+ * Algorithm: Standard Dijkstra with min-heap priority queue — O(E log V)
+ * Compiled to: server/bin/native_dijkstra.exe
+ */
 #include <algorithm>
 #include <cmath>
 #include <iomanip>

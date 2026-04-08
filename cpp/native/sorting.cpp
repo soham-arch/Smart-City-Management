@@ -1,3 +1,15 @@
+/*
+ * sorting.cpp — Merge Sort for Distance-Based Sorting (C++ Binary)
+ *
+ * Sorts hospital/station candidates by distance from the incident location.
+ * Uses Merge Sort for guaranteed O(n log n) performance.
+ *
+ * Input (stdin):  Tab-separated: id\tname\tdistance (one per line)
+ * Output (stdout): JSON array of sorted candidates
+ *
+ * Algorithm: Merge Sort — O(n log n), stable sort
+ * Compiled to: server/bin/native_sorting.exe
+ */
     #include <algorithm>
 #include <cstdlib>
 #include <iomanip>

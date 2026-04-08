@@ -1,3 +1,16 @@
+/**
+ * DashboardPage.jsx — Command Dashboard / Overview
+ *
+ * Displays a comprehensive real-time overview of all emergency services:
+ *   - 12-stat overview grid (incidents, units, beds, patients, stations)
+ *   - Service status panels for Ambulance/Police/Fire (utilization %, active count)
+ *   - Live Incident Feed with expandable detail cards
+ *   - Interactive Resource Heatmap (NodeMap with service data overlays)
+ *   - Infrastructure summary (hospital capacity bars, police/fire station usage)
+ *
+ * Data sources: useCityStats (aggregated stats), usePolling (hospitals, incidents, etc.)
+ * Animations: GSAP scroll-triggered entrance animations for all sections
+ */
 import { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';

@@ -1,3 +1,18 @@
+/**
+ * FirePage.jsx — Fire Dispatch System
+ *
+ * Fire emergency dispatch with spread simulation:
+ *   Step 1: Fire Detection & Analysis
+ *   Step 2: Spread Simulation (animated fire rings)
+ *   Step 3: 0/1 Knapsack resource allocation
+ *   Step 4: Dijkstra shortest path routing to nearest station
+ *
+ * Auto-selects the best fire station using C++ algorithms (no manual selection).
+ * Computes recommended resources (trucks, firefighters, tankers) via C++ fire_resource_calc.
+ *
+ * Backend calls: POST /api/fire-dispatch → C++ Dijkstra + Knapsack + Priority
+ * C++ algorithms used: Dijkstra, 0/1 Knapsack, Priority Queue, Fire Resource Calculator
+ */
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPanel from '../components/GlassPanel';

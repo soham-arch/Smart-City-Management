@@ -1,3 +1,22 @@
+/**
+ * App.jsx — Root Application Component
+ *
+ * Sets up the full application layout with:
+ *   - Three.js particle background (ParticleBackground)
+ *   - Top navigation bar (TopNav) + side dot navigation (Navigation)
+ *   - Route-based page loading (Landing, Ambulance, Police, Fire, Dashboard, Hospital)
+ *   - Dynamic theme classes per route (changes accent colors)
+ *   - Scroll progress bar at the top
+ *   - ErrorBoundary wrapping each page for crash isolation
+ *
+ * ROUTES:
+ *   /           → LandingPage (hero + emergency cards + incident feed)
+ *   /ambulance  → AmbulancePage (dispatch workflow)
+ *   /police     → PolicePage (crime reporting + dispatch)
+ *   /fire       → FirePage (fire dispatch)
+ *   /dashboard  → DashboardPage (overview stats + heatmap)
+ *   /hospitals  → HospitalPage (bed management + ICU knapsack)
+ */
 import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import gsap from 'gsap';

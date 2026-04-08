@@ -1,6 +1,19 @@
-// Pune map nodes with SVG coordinates for viewBox 0 0 1400 900
-// V3 coordinates — minimum 60px between adjacent nodes, spread across wider canvas
-
+/**
+ * puneNodes.js — City Map Node Definitions
+ *
+ * Defines all nodes on the Pune city graph used for SVG map rendering.
+ * Each node has: id, label, type (incident/hospital/police_station/fire_station/junction), x, y.
+ *
+ * Node types:
+ *   - incident        — User-selectable emergency locations (15 locations)
+ *   - hospital        — Hospital nodes linked to hospital DB records (10 hospitals)
+ *   - police_station  — Police station nodes (10 stations)
+ *   - fire_station    — Fire station nodes (7 stations)
+ *   - junction        — Non-selectable road intersections for routing
+ *
+ * Coordinate system: SVG viewBox 0 0 1400 900
+ * This data is used by: NodeMap component, all dispatch pages, puneEdges.js
+ */
 export const puneNodes = [
   // ── Incident / Landmark Nodes ──
   { id: 'bhugaon', label: 'Bhugaon', type: 'incident', x: 70, y: 480 },
