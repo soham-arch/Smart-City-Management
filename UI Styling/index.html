@@ -1,0 +1,354 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Life of a Developer — Shwetank Patil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <pre class="loader-ascii">
+ ██████╗ ███████╗██╗   ██╗
+ ██╔══██╗██╔════╝██║   ██║
+ ██║  ██║█████╗  ██║   ██║
+ ██║  ██║██╔══╝  ╚██╗ ██╔╝
+ ██████╔╝███████╗ ╚████╔╝
+ ╚═════╝ ╚══════╝  ╚═══╝ </pre>
+  <div class="lbar"><div class="lfill"></div></div>
+  <div class="lmsg" id="lmsg">$ npm install life...</div>
+</div>
+
+<!-- CURSOR -->
+<div id="cur">★</div>
+<div id="cur-trail"></div>
+
+<!-- SCROLL PROGRESS -->
+<div id="bar"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">dev/life.exe</div>
+  <div class="nav-dots">
+    <div class="ndot on" onclick="goTo(0)" title="Hero"></div>
+    <div class="ndot" onclick="goTo(1)" title="Hello World"></div>
+    <div class="ndot" onclick="goTo(2)" title="Bug Zone"></div>
+    <div class="ndot" onclick="goTo(3)" title="Deadline"></div>
+    <div class="ndot" onclick="goTo(4)" title="The End"></div>
+  </div>
+</nav>
+
+<!-- THREE.JS BACKGROUND -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ════ § 1  HERO ════ -->
+<section id="s-hero" class="panel">
+  <div class="hero-inner" id="hero-inner">
+    <div class="h-eye" id="h-eye">// an interactive saga by Shwetank Patil</div>
+    <h1 class="h-title" id="h-title">
+      THE<br><em>Life</em> OF<br><span class="dim">A</span> DEV
+    </h1>
+    <p class="h-sub" id="h-sub">
+      <span id="tw">It compiles on my machine.</span><br>
+      <span style="opacity:.35;font-size:11px">Stack Overflow–powered · Caffeine–driven · Sleep-deprived</span>
+    </p>
+    <div class="h-cue" id="h-cue">
+      <div class="scl-lbl">scroll</div>
+      <div class="scl"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ § 2  HELLO WORLD ════ -->
+<section id="s-hello" class="panel" style="padding:0">
+  <div class="hz-outer">
+    <div class="hz-track" id="hz-track">
+
+      <!-- Slide A -->
+      <div class="hz-slide">
+        <div class="bg-num">01</div>
+        <div class="s-label hzr">Chapter 01</div>
+        <div class="rule hzr"></div>
+        <h2 class="s-title hzr">Hello,<br><span style="color:var(--blue)">World.</span></h2>
+        <p class="s-body hzr" style="max-width:480px">
+          It started with a YouTube tutorial.<br>
+          <strong>"Learn HTML in 10 minutes."</strong><br>
+          You typed <span class="g">&lt;h1&gt;Hello World&lt;/h1&gt;</span>.<br>
+          It rendered. In Times New Roman.<br>
+          You thought you'd <strong>invented the internet.</strong>
+        </p>
+      </div>
+
+      <!-- Slide B -->
+      <div class="hz-slide two-col">
+        <div class="two-col-text">
+          <div class="s-label hzr">The First File</div>
+          <div class="rule hzr"></div>
+          <h2 class="s-title hzr" style="font-size:clamp(28px,5.5vw,76px)">index<span style="color:var(--green)">.html</span></h2>
+          <p class="s-body hzr">
+            CSS arrived next.<br>
+            You spent <span class="a">3 hours</span> centering a div.<br>
+            Googled it. Got <span class="r">47 answers.</span><br>
+            None worked.<br>
+            <strong>You are now a developer.</strong>
+          </p>
+        </div>
+        <div class="two-col-editor">
+          <div class="editor hzr">
+            <div class="ed-bar">
+              <div class="dot r2"></div><div class="dot y2"></div><div class="dot g2"></div>
+              <span class="ed-name">index.html — my_first_site</span>
+            </div>
+            <div class="ed-body">
+              <div class="cl"><span class="ln">1</span><span class="cm">&lt;!-- My EPIC site --&gt;</span></div>
+              <div class="cl"><span class="ln">2</span><span class="tg">&lt;html&gt;</span></div>
+              <div class="cl"><span class="ln">3</span><span class="tg">&nbsp;&nbsp;&lt;body&gt;</span></div>
+              <div class="cl"><span class="ln">4</span><span class="tg">&nbsp;&nbsp;&nbsp;&nbsp;&lt;h1 </span><span class="at">style=</span><span class="str">"color:red"</span><span class="tg">&gt;</span></div>
+              <div class="cl"><span class="ln">5</span><span class="str">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hello, World!!!</span></div>
+              <div class="cl"><span class="ln">6</span><span class="tg">&nbsp;&nbsp;&nbsp;&nbsp;&lt;/h1&gt;</span></div>
+              <div class="cl"><span class="ln">7</span><span class="tg">&nbsp;&nbsp;&nbsp;&nbsp;&lt;marquee&gt;</span></div>
+              <div class="cl"><span class="ln">8</span><span class="str">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Welcome 2 my site!!</span></div>
+              <div class="cl"><span class="ln">9</span><span class="tg">&nbsp;&nbsp;&nbsp;&nbsp;&lt;/marquee&gt;</span></div>
+              <div class="cl"><span class="ln">10</span><span class="cm">&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- center this --&gt;</span></div>
+              <div class="cl"><span class="ln">11</span><span class="tg">&nbsp;&nbsp;&lt;/body&gt;</span></div>
+              <div class="cl"><span class="ln">12</span><span class="tg">&lt;/html&gt;</span><span class="tc"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide C -->
+      <div class="hz-slide">
+        <div class="bg-num" style="opacity:.018">02</div>
+        <div class="s-label hzr">The Journey</div>
+        <div class="rule hzr"></div>
+        <h2 class="s-title hzr" style="font-size:clamp(28px,5vw,70px)">The Stack<br><span style="color:var(--amber)">Grows.</span></h2>
+        <div class="timeline hzr">
+          <div class="tl-item"><div class="tl-dot"></div><span class="tl-yr">Wk 1</span><div class="tl-txt">HTML — <small>Felt like a god</small></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><span class="tl-yr">Wk 2</span><div class="tl-txt">CSS — <small>Cried about flexbox</small></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><span class="tl-yr">Wk 4</span><div class="tl-txt">JavaScript — <small>undefined is not a function</small></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><span class="tl-yr">Mo 2</span><div class="tl-txt">React — <small>Re-learned everything</small></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><span class="tl-yr">Mo 3</span><div class="tl-txt">Git + Node — <small>Broke production</small></div></div>
+          <div class="tl-item" style="border-bottom:none"><div class="tl-dot" style="background:var(--green)"></div><span class="tl-yr">Now</span><div class="tl-txt" style="color:var(--green)">Still learning — <small style="color:var(--dim)">forever</small></div></div>
+        </div>
+      </div>
+
+      <!-- Slide D -->
+      <div class="hz-slide">
+        <div class="s-label hzr">Dev Health Report</div>
+        <div class="rule hzr"></div>
+        <h2 class="s-title hzr" style="font-size:clamp(28px,5vw,70px)">System<br><span style="color:var(--red)">Status.</span></h2>
+        <div class="mem-bars hzr" id="mem-bars">
+          <div class="mb-row"><span class="mb-lbl">Sleep</span><div class="mb-track"><div class="mb-fill" style="background:var(--blue)" data-w="20%"></div></div><span class="mb-val">20%</span></div>
+          <div class="mb-row"><span class="mb-lbl">Caffeine</span><div class="mb-track"><div class="mb-fill" style="background:var(--amber)" data-w="95%"></div></div><span class="mb-val">95%</span></div>
+          <div class="mb-row"><span class="mb-lbl">Sanity</span><div class="mb-track"><div class="mb-fill" style="background:var(--red)" data-w="12%"></div></div><span class="mb-val">12%</span></div>
+          <div class="mb-row"><span class="mb-lbl">SO tabs</span><div class="mb-track"><div class="mb-fill" style="background:var(--green)" data-w="100%"></div></div><span class="mb-val">∞</span></div>
+          <div class="mb-row"><span class="mb-lbl">Productivity</span><div class="mb-track"><div class="mb-fill" style="background:var(--amber)" data-w="48%"></div></div><span class="mb-val">48%</span></div>
+          <div class="mb-row"><span class="mb-lbl">Imposter syn.</span><div class="mb-track"><div class="mb-fill" style="background:var(--red)" data-w="89%"></div></div><span class="mb-val">89%</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════ § 3  BUG ZONE ════ -->
+<section id="s-bugs" class="panel">
+  <div class="bugs-inner">
+    <div id="bug-left">
+      <div class="s-label">Chapter 02 // The Dark Ages</div>
+      <div class="rule r"></div>
+      <h2 class="s-title"><span class="glitch" data-t="DEBUG">DEBUG</span><br><span style="color:var(--red)">HELL.</span></h2>
+      <p class="s-body" style="margin-bottom:16px">
+        It's <span class="r">2 AM</span>. Code worked <strong>5 minutes ago</strong>.<br>
+        You changed <span class="a">one line</span>. Everything's on fire.<br>
+        Tap to squash bugs (they'll come back).
+      </p>
+      <div class="bug-chips" id="bug-chips">
+        <div class="chip" onclick="squash(this)">🐛 TypeError line 47</div>
+        <div class="chip" onclick="squash(this)">🐛 CORS error</div>
+        <div class="chip" onclick="squash(this)">🐛 Cannot read undefined</div>
+        <div class="chip" onclick="squash(this)">🐛 404 Not Found</div>
+        <div class="chip" onclick="squash(this)">🐛 CSS not loading</div>
+        <div class="chip" onclick="squash(this)">🐛 Merge conflict</div>
+        <div class="chip" onclick="squash(this)">🐛 npm ERR!</div>
+        <div class="chip" onclick="squash(this)">🐛 Works on localhost</div>
+        <div class="chip" onclick="squash(this)">🐛 Missing semicolon</div>
+        <div class="chip" onclick="squash(this)">🐛 Infinite loop</div>
+      </div>
+      <div id="bug-msg" style="font-family:var(--font-mono);font-size:11px;color:var(--green);margin-top:12px;min-height:16px"></div>
+      <div class="counters" style="margin-top:18px">
+        <div class="ctr"><div class="ctr-n" style="color:var(--amber)" id="c-cof">0</div><div class="ctr-l">Coffees ☕</div></div>
+        <div class="ctr"><div class="ctr-n" style="color:var(--blue)"  id="c-so">0</div><div class="ctr-l">SO Tabs 🔍</div></div>
+        <div class="ctr"><div class="ctr-n" style="color:var(--green)" id="c-log">0</div><div class="ctr-l">console.log 🐞</div></div>
+        <div class="ctr"><div class="ctr-n" style="color:var(--red)"   id="c-wk">0</div><div class="ctr-l">"Works on mine" 💻</div></div>
+      </div>
+    </div>
+    <div id="bug-right">
+      <div class="term">
+        <div class="term-bar">
+          <div class="dot r2"></div><div class="dot y2"></div><div class="dot g2"></div>
+          <span class="term-title">bash — ~/projects/my-app — 2:47 AM</span>
+        </div>
+        <div class="term-body">
+          <div><span class="td">$</span> npm start</div>
+          <div><span class="ti">Starting dev server...</span></div>
+          <div>&nbsp;</div>
+          <div><span class="te">ERROR: Cannot find module 'react'</span></div>
+          <div><span class="td">$</span> npm install</div>
+          <div><span class="tw">⚠ 47 vulnerabilities (12 critical)</span></div>
+          <div><span class="td">$</span> npm start</div>
+          <div><span class="te">SyntaxError: Unexpected token '&lt;'</span></div>
+          <div>&nbsp;</div>
+          <div><span class="td">$</span> git diff HEAD</div>
+          <div><span class="te">&gt;&gt;&gt;&gt;&gt;&gt;&gt; everything_is_broken.js</span></div>
+          <div>&nbsp;</div>
+          <div><span class="td">$</span> console.log("please work")</div>
+          <div><span class="tok">please work</span></div>
+          <div><span class="td"># still broken</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tw">stackoverflow: "Marked duplicate of 2009 post"</span></div>
+          <div><span class="te">Thread closed: "lacks detail"</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tok">// It works. Don't ask why. Never touch it.</span></div>
+          <div><span class="td">$</span> git commit -m "fix hopefully"<span class="tc"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ § 4  DEADLINE ════ -->
+<section id="s-deadline" class="panel">
+  <div class="dl-inner">
+    <div id="dl-left">
+      <div class="s-label">Chapter 03 // Final Boss</div>
+      <div class="rule a"></div>
+      <h2 class="s-title">DEADLINE<br><span style="color:var(--amber)">MODE.</span></h2>
+      <p class="s-body" style="margin-bottom:20px">
+        T-minus <span class="r">2 hours</span>. Feature not done.<br>
+        Tests not written (who writes tests?).<br>
+        README says <span class="a">"Coming soon."</span><br>
+        Commit message: <strong>"please work please work"</strong>
+      </p>
+      <div class="browser-tabs">
+        <div class="btab on">localhost:3000</div>
+        <div class="btab so">Stack Overflow</div>
+        <div class="btab">MDN Docs</div>
+        <div class="btab so">Stack Overflow</div>
+        <div class="btab">ChatGPT</div>
+        <div class="btab so">Stack Overflow</div>
+        <div class="btab">r/webdev</div>
+        <div class="btab so">Stack Overflow</div>
+        <div class="btab">8hr tutorial</div>
+      </div>
+      <div class="browser-body">
+        <span style="color:var(--amber)">stackoverflow.com</span> — "how to center a div" (2009)<br>
+        <span style="color:var(--dim)">Marked duplicate · 847 answers · accepted answer doesn't work</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-n">6h</div><div class="stat-d">avg sleep</div></div>
+        <div class="stat danger"><div class="stat-n">47</div><div class="stat-d">commits today</div></div>
+        <div class="stat"><div class="stat-n">∞</div><div class="stat-d">SO tabs</div></div>
+        <div class="stat danger"><div class="stat-n" id="clock-stat">--:--</div><div class="stat-d">to deadline</div></div>
+      </div>
+    </div>
+    <div id="dl-right">
+      <div class="clock-box">
+        <div class="clock-lbl">⚠ Submission Deadline</div>
+        <div class="clock-digits" id="clock">00:00:00</div>
+        <div class="clock-sub">Time remaining today</div>
+      </div>
+      <div class="cof-card">
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase">☕ Developer Fuel Level</div>
+        <svg class="cof-svg" width="150" height="200" viewBox="0 0 150 200">
+          <path d="M48 26 Q44 14 48 4" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5">
+            <animate attributeName="d" values="M48 26 Q44 14 48 4;M48 26 Q52 14 48 4;M48 26 Q44 14 48 4" dur="2s" repeatCount="indefinite"/>
+          </path>
+          <path d="M75 20 Q71 8 75 -1" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4">
+            <animate attributeName="d" values="M75 20 Q71 8 75 -1;M75 20 Q79 8 75 -1;M75 20 Q71 8 75 -1" dur="2.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M102 26 Q98 14 102 4" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5">
+            <animate attributeName="d" values="M102 26 Q98 14 102 4;M102 26 Q106 14 102 4;M102 26 Q98 14 102 4" dur="1.8s" repeatCount="indefinite"/>
+          </path>
+          <path d="M24 38 L35 175 H115 L126 38 Z" fill="#1e0e00" stroke="#6f3e0e" stroke-width="1.5"/>
+          <defs>
+            <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c8860a"/><stop offset="100%" stop-color="#6f3e0e"/>
+            </linearGradient>
+            <clipPath id="cc2"><path d="M24 38 L35 175 H115 L126 38 Z"/></clipPath>
+          </defs>
+          <rect id="cof-liq" x="24" y="175" width="102" height="0" fill="url(#cg2)" clip-path="url(#cc2)"/>
+          <ellipse id="cof-foam" cx="75" cy="175" rx="51" ry="4" fill="#c8860a" opacity="0.5"/>
+          <path d="M24 38 L35 175 H115 L126 38 Z" fill="none" stroke="#8b5e00" stroke-width="2"/>
+          <ellipse cx="75" cy="38" rx="51" ry="9" fill="#2a1200" stroke="#8b5e00" stroke-width="1.5"/>
+          <path d="M126 68 Q152 68 152 103 Q152 138 126 138" stroke="#6f3e0e" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <ellipse cx="75" cy="180" rx="58" ry="7" fill="#150800" stroke="#6f3e0e" stroke-width="1"/>
+        </svg>
+        <div class="fuel-wrap">
+          <div class="fuel-top"><span>Empty</span><span id="fuel-pct">0%</span><span>Full</span></div>
+          <div class="fuel-track"><div class="fuel-fill" id="fuel-fill"></div></div>
+          <div class="cof-sub"><span id="cup-count">0</span> cups · productivity: <span id="prod-lbl" style="color:var(--green)">LOW</span></div>
+        </div>
+        <button class="cof-btn" onclick="drinkCoffee()">☕ Drink Coffee</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ § 5  CONCLUSION ════ -->
+<section id="s-end" class="panel">
+  <div id="end-stars" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0"></div>
+  <div class="end-inner">
+    <div class="end-tag" id="et">Chapter 04 // The Truth</div>
+    <h2 class="end-h" id="eh">
+      AND YET<br><span class="g">WE</span> <span class="r">KEEP</span><br><em><span class="a">CODING.</span></em>
+    </h2>
+    <p class="end-body" id="eb">
+      Through every <span style="color:var(--red)">TypeError</span> and merge conflict.<br>
+      Through every <span style="color:var(--amber)">3 AM debugging session</span>.<br>
+      Through every "it works on my machine."<br><br>
+      Because when it <em>finally</em> compiles, deploys, and a user smiles —<br>
+      <strong>that feeling is worth everything.</strong>
+    </p>
+    <div class="badges" id="ebadges">
+      <div class="badge"><div class="bdot" style="background:var(--green)"></div>Full Stack Survivor</div>
+      <div class="badge"><div class="bdot" style="background:var(--red)"></div>Bug Whisperer</div>
+      <div class="badge"><div class="bdot" style="background:var(--amber)"></div>Caffeine Engineer</div>
+      <div class="badge"><div class="bdot" style="background:var(--blue)"></div>Stack Overflow Veteran</div>
+    </div>
+    <div class="final-block" id="efinal">
+      <div style="color:var(--dim)">// The developer's final commit</div>
+      <div><span class="kw">const</span> <span class="at">dev</span> = {</div>
+      <div>&nbsp;&nbsp;sleep: <span class="str">"overrated"</span>,</div>
+      <div>&nbsp;&nbsp;coffee: <span class="str">"essential"</span>,</div>
+      <div>&nbsp;&nbsp;bugs: <span class="str">"features"</span>,</div>
+      <div>&nbsp;&nbsp;passion: <span style="color:var(--green)">Infinity</span></div>
+      <div>};</div>
+      <div>&nbsp;</div>
+      <div style="color:var(--dim)">// git commit -m "ship it 🚀"</div>
+    </div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);opacity:.35;margin-top:32px">
+      Frontend Odyssey 2025 · IIT Patna · Made with ☕ × ∞
+    </div>
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--green);opacity:.7;margin-top:12px;letter-spacing:.15em">
+      — Shwetank Patil
+    </div>
+  </div>
+</section>
+
+<!-- Libraries (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<!-- Your script -->
+<script src="script.js"></script>
+
+</body>
+</html>

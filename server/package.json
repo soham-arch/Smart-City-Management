@@ -1,0 +1,13 @@
+{
+  "name": "smart-city-ems-server",
+  "version": "1.0.0",
+  "description": "Smart City EMS Mock API Server",
+  "main": "cppServer.js",
+  "scripts": {
+    "start": "node cppServer.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
