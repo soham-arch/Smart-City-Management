@@ -1,158 +1,121 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
+/*
+ * hospital_selector.cpp — Best Hospital Selection
+ *
+ * Picks the optimal hospital from knapsack-selected candidates
+ * using a distance-weighted scoring formula: score = value / distance.
+ *
+ * Input (stdin):  Line 1: count
+ *                 Line 2: selected_ids (comma-separated from knapsack, or "none")
+ *                 Lines 3+: id\tname\tdistance\tvalue\tbeds\ticu_beds (tab-separated)
+ * Output (stdout): JSON { selected_id, selected_name, score, distance }
+ *
+ * Compiled to: server/bin/native_hospital_selector.exe
+ */
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <cstdlib>
+#include <cmath>
+#include <iomanip>
 
-/*
- * hospital_selector.cpp — C++ binary for selecting the best hospital
- *
- * Uses a distance-weighted composite scoring formula to pick the optimal
- * hospital from a set of candidates (output of knapsack).
- *
- * Input (stdin):
- *   Line 1: <count> — number of candidate hospitals
- *   Line 2: <selected_ids_csv> — comma-separated IDs from knapsack selection (or "none")
- *   Lines 3..N+2: <id>\t<name>\t<distance>\t<value>\t<beds_available>\t<icu_beds_available>
- *
- * Output (stdout, JSON):
- *   { "selected_id": "...", "selected_name": "...", "score": 123.5, "distance": 4.2 }
- */
+using namespace std;
 
 struct Hospital {
-    std::string id;
-    std::string name;
+    string id;
+    string name;
     double distance;
     int value;
     int beds_available;
     int icu_beds_available;
-    bool in_knapsack_selection;
+    bool in_knapsack;
 };
 
-static std::string escapeJson(const std::string& s) {
-    std::string out;
-    for (size_t i = 0; i < s.size(); ++i) {
-        char c = s[i];
-        if (c == '\\' || c == '"') out.push_back('\\');
-        out.push_back(c);
-    }
-    return out;
-}
-
-static std::vector<std::string> splitTab(const std::string& line) {
-    std::vector<std::string> parts;
-    std::stringstream ss(line);
-    std::string part;
-    while (std::getline(ss, part, '\t')) {
-        parts.push_back(part);
-    }
-    return parts;
-}
-
-static std::vector<std::string> splitComma(const std::string& s) {
-    std::vector<std::string> parts;
-    std::stringstream ss(s);
-    std::string part;
-    while (std::getline(ss, part, ',')) {
-        // Trim whitespace
-        size_t start = part.find_first_not_of(" \t");
-        size_t end = part.find_last_not_of(" \t");
-        if (start != std::string::npos) {
-            parts.push_back(part.substr(start, end - start + 1));
-        }
-    }
-    return parts;
-}
-
-static std::string toFixed1(double v) {
-    std::ostringstream out;
-    out << std::fixed << std::setprecision(1) << v;
-    return out.str();
-}
-
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(NULL);
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
 
-    std::string countLine, selectedIdsLine;
-    if (!std::getline(std::cin, countLine) || !std::getline(std::cin, selectedIdsLine)) {
-        std::cout << "{\"error\":\"invalid input\"}";
+    string countLine, selectedLine;
+    if (!getline(cin, countLine) || !getline(cin, selectedLine)) {
+        cout << "{\"error\":\"invalid input\"}";
         return 1;
     }
 
-    int count = std::atoi(countLine.c_str());
-    std::vector<std::string> selectedIds = splitComma(selectedIdsLine);
+    int count = atoi(countLine.c_str());
 
-    // Build a set of selected IDs for quick lookup
-    std::vector<Hospital> hospitals;
+    // Parse comma-separated selected IDs from knapsack
+    vector<string> selectedIds;
+    stringstream idStream(selectedLine);
+    string idToken;
+    while (getline(idStream, idToken, ',')) {
+        // Trim whitespace
+        int s = idToken.find_first_not_of(" \t");
+        int e = idToken.find_last_not_of(" \t");
+        if (s != string::npos)
+            selectedIds.push_back(idToken.substr(s, e - s + 1));
+    }
 
+    // Read hospitals
+    vector<Hospital> hospitals;
     for (int i = 0; i < count; i++) {
-        std::string line;
-        if (!std::getline(std::cin, line)) break;
-        std::vector<std::string> parts = splitTab(line);
-        if (parts.size() < 6) continue;
+        string line;
+        if (!getline(cin, line)) break;
 
-        Hospital h;
-        h.id = parts[0];
-        h.name = parts[1];
-        h.distance = std::atof(parts[2].c_str());
-        h.value = std::atoi(parts[3].c_str());
-        h.beds_available = std::atoi(parts[4].c_str());
-        h.icu_beds_available = std::atoi(parts[5].c_str());
-        h.in_knapsack_selection = false;
+        stringstream ss(line);
+        string id, name, distStr, valStr, bedsStr, icuStr;
+        getline(ss, id, '\t');
+        getline(ss, name, '\t');
+        getline(ss, distStr, '\t');
+        getline(ss, valStr, '\t');
+        getline(ss, bedsStr, '\t');
+        getline(ss, icuStr, '\t');
 
-        for (size_t s = 0; s < selectedIds.size(); s++) {
-            if (selectedIds[s] == h.id) {
-                h.in_knapsack_selection = true;
-                break;
-            }
+        // Check if this hospital was selected by knapsack
+        bool selected = false;
+        for (int j = 0; j < selectedIds.size(); j++) {
+            if (selectedIds[j] == id) { selected = true; break; }
         }
 
-        hospitals.push_back(h);
+        hospitals.push_back({id, name, atof(distStr.c_str()),
+                            atoi(valStr.c_str()), atoi(bedsStr.c_str()),
+                            atoi(icuStr.c_str()), selected});
     }
 
     if (hospitals.empty()) {
-        std::cout << "{\"error\":\"no hospitals\"}";
+        cout << "{\"error\":\"no hospitals\"}";
         return 1;
     }
 
-    // Filter to knapsack-selected hospitals if any exist
-    std::vector<Hospital*> pool;
-    for (size_t i = 0; i < hospitals.size(); i++) {
-        if (hospitals[i].in_knapsack_selection) {
-            pool.push_back(&hospitals[i]);
-        }
+    // Filter to knapsack-selected hospitals (fallback to all if none selected)
+    vector<Hospital*> pool;
+    for (int i = 0; i < hospitals.size(); i++) {
+        if (hospitals[i].in_knapsack) pool.push_back(&hospitals[i]);
     }
-    // If no knapsack matches, use all
     if (pool.empty()) {
-        for (size_t i = 0; i < hospitals.size(); i++) {
-            pool.push_back(&hospitals[i]);
-        }
+        for (int i = 0; i < hospitals.size(); i++) pool.push_back(&hospitals[i]);
     }
 
-    // Score: value / max(distance, 0.1), tiebreaker: closer first
+    // Score = value / distance — higher is better
     Hospital* best = pool[0];
-    double bestScore = best->value / std::max(best->distance, 0.1);
+    double bestScore = best->value / max(best->distance, 0.1);
 
-    for (size_t i = 1; i < pool.size(); i++) {
-        double score = pool[i]->value / std::max(pool[i]->distance, 0.1);
-        if (score - bestScore > 0.01) {
+    for (int i = 1; i < pool.size(); i++) {
+        double score = pool[i]->value / max(pool[i]->distance, 0.1);
+        if (score > bestScore + 0.01) {
             best = pool[i];
             bestScore = score;
-        } else if (std::abs(score - bestScore) <= 0.01 && pool[i]->distance < best->distance) {
+        } else if (abs(score - bestScore) <= 0.01 && pool[i]->distance < best->distance) {
             best = pool[i];
             bestScore = score;
         }
     }
 
-    std::cout << "{\"selected_id\":\"" << escapeJson(best->id)
-              << "\",\"selected_name\":\"" << escapeJson(best->name)
-              << "\",\"score\":" << toFixed1(bestScore)
-              << ",\"distance\":" << toFixed1(best->distance)
-              << "}";
+    cout << fixed << setprecision(1);
+    cout << "{\"selected_id\":\"" << best->id
+         << "\",\"selected_name\":\"" << best->name
+         << "\",\"score\":" << bestScore
+         << ",\"distance\":" << best->distance << "}";
 
     return 0;
 }

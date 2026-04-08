@@ -1,107 +1,105 @@
 /*
- * sorting.cpp — Merge Sort for Distance-Based Sorting (C++ Binary)
+ * sorting.cpp — Merge Sort for Distance-Based Sorting
  *
- * Sorts hospital/station candidates by distance from the incident location.
- * Uses Merge Sort for guaranteed O(n log n) performance.
+ * Sorts hospital/station candidates by distance from the incident.
  *
- * Input (stdin):  Tab-separated: id\tname\tdistance (one per line)
- * Output (stdout): JSON array of sorted candidates
+ * Input (stdin):  Line 1: count
+ *                 Lines 2+: id\tname\tdistance (tab-separated)
+ * Output (stdout): JSON with sorted_ids[] and ordered[] array
  *
  * Algorithm: Merge Sort — O(n log n), stable sort
  * Compiled to: server/bin/native_sorting.exe
  */
-    #include <algorithm>
-#include <cstdlib>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <cstdlib>
+
+using namespace std;
 
 struct Candidate {
-    std::string id;
-    std::string name;
+    string id;
+    string name;
     double distance;
 };
 
-static std::string escapeJson(const std::string& value) {
-    std::string escaped;
-    for (size_t i = 0; i < value.size(); ++i) {
-        const char ch = value[i];
-        if (ch == '\\' || ch == '"') {
-            escaped.push_back('\\');
-        }
-        escaped.push_back(ch);
+// Merge sort implementation
+void merge(vector<Candidate>& arr, int left, int mid, int right) {
+    vector<Candidate> temp;
+    int i = left, j = mid + 1;
+
+    while (i <= mid && j <= right) {
+        if (arr[i].distance <= arr[j].distance)
+            temp.push_back(arr[i++]);
+        else
+            temp.push_back(arr[j++]);
     }
-    return escaped;
+    while (i <= mid) temp.push_back(arr[i++]);
+    while (j <= right) temp.push_back(arr[j++]);
+
+    for (int k = 0; k < temp.size(); k++)
+        arr[left + k] = temp[k];
 }
 
-static std::vector<std::string> splitTab(const std::string& line) {
-    std::vector<std::string> parts;
-    std::stringstream ss(line);
-    std::string part;
-    while (std::getline(ss, part, '\t')) {
-        parts.push_back(part);
-    }
-    return parts;
-}
-
-static std::string toRoundedString(double value) {
-    std::ostringstream out;
-    out << std::fixed << std::setprecision(1) << value;
-    return out.str();
+void mergeSort(vector<Candidate>& arr, int left, int right) {
+    if (left >= right) return;
+    int mid = (left + right) / 2;
+    mergeSort(arr, left, mid);
+    mergeSort(arr, mid + 1, right);
+    merge(arr, left, mid, right);
 }
 
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(NULL);
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
 
-    std::string countLine;
-    if (!std::getline(std::cin, countLine)) {
-        std::cout << "{\"error\":\"invalid input\"}";
+    string countLine;
+    if (!getline(cin, countLine)) {
+        cout << "{\"error\":\"invalid input\"}";
         return 1;
     }
 
-    const int count = std::atoi(countLine.c_str());
-    std::vector<Candidate> candidates;
-    for (int i = 0; i < count; ++i) {
-        std::string line;
-        if (!std::getline(std::cin, line)) {
-            break;
-        }
-        std::vector<std::string> parts = splitTab(line);
-        if (parts.size() < 3) {
-            continue;
-        }
-        Candidate candidate;
-        candidate.id = parts[0];
-        candidate.name = parts[1];
-        candidate.distance = std::atof(parts[2].c_str());
-        candidates.push_back(candidate);
+    int count = atoi(countLine.c_str());
+
+    // Read candidates (tab-separated: id \t name \t distance)
+    vector<Candidate> candidates;
+    for (int i = 0; i < count; i++) {
+        string line;
+        if (!getline(cin, line)) break;
+
+        stringstream ss(line);
+        string id, name, dStr;
+        getline(ss, id, '\t');
+        getline(ss, name, '\t');
+        getline(ss, dStr, '\t');
+
+        candidates.push_back({id, name, atof(dStr.c_str())});
     }
 
-    std::sort(candidates.begin(), candidates.end(), [](const Candidate& left, const Candidate& right) {
-        return left.distance < right.distance;
-    });
+    // Sort by distance using merge sort
+    if (candidates.size() > 1)
+        mergeSort(candidates, 0, candidates.size() - 1);
 
-    std::cout << "{\"sorted_ids\":[";
-    for (size_t i = 0; i < candidates.size(); ++i) {
-        if (i > 0) {
-            std::cout << ",";
-        }
-        std::cout << "\"" << escapeJson(candidates[i].id) << "\"";
+    // Output JSON
+    cout << fixed << setprecision(1);
+
+    cout << "{\"sorted_ids\":[";
+    for (int i = 0; i < candidates.size(); i++) {
+        if (i > 0) cout << ",";
+        cout << "\"" << candidates[i].id << "\"";
     }
 
-    std::cout << "],\"ordered\":[";
-    for (size_t i = 0; i < candidates.size(); ++i) {
-        if (i > 0) {
-            std::cout << ",";
-        }
-        std::cout << "{\"id\":\"" << escapeJson(candidates[i].id)
-                  << "\",\"name\":\"" << escapeJson(candidates[i].name)
-                  << "\",\"distance\":" << toRoundedString(candidates[i].distance) << "}";
+    cout << "],\"ordered\":[";
+    for (int i = 0; i < candidates.size(); i++) {
+        if (i > 0) cout << ",";
+        cout << "{\"id\":\"" << candidates[i].id
+             << "\",\"name\":\"" << candidates[i].name
+             << "\",\"distance\":" << candidates[i].distance << "}";
     }
+    cout << "]}";
 
-    std::cout << "]}";
     return 0;
 }

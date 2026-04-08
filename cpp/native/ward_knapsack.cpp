@@ -1,15 +1,14 @@
 /*
- * ward_knapsack.cpp — ICU Ward Allocation using 0/1 Knapsack (C++ Binary)
+ * ward_knapsack.cpp — ICU Ward Allocation using 0/1 Knapsack
  *
- * Decides which patients should be in ICU vs General ward based on severity.
- * Each patient has an effective severity (profit) and resource weight.
- * ICU capacity = icu_beds_total * 2 resource units.
+ * Decides which patients should be in ICU vs General ward.
+ * Uses 0/1 Knapsack DP where profit = effective severity, weight = resource weight.
  *
- * Input (stdin):  Line 1: <resource_capacity>
- *                 Line 2+: id\tinjury_type\tseverity\tward (tab-separated)
+ * Input (stdin):  Line 1: resource_capacity (icu_beds_total * 2)
+ *                 Lines 2+: id\tinjury_type\tseverity\tward (tab-separated)
  * Output (stdout): JSON with icu_admitted[], general_ward[], dp_table_snapshot
  *
- * Algorithm: 0/1 Knapsack DP with backtracking — O(n * capacity)
+ * Algorithm: 0/1 Knapsack DP — O(n * capacity)
  * Compiled to: server/bin/native_ward_knapsack.exe
  */
 #include <iostream>
@@ -21,174 +20,139 @@
 
 using namespace std;
 
+// Injury type lookup table
 struct InjuryType {
     string name;
     int healing_days;
     int resource_weight;
-    int initial_severity_bonus;
+    int severity_bonus;
+};
+
+map<string, InjuryType> injuryTypes = {
+    {"cardiac", {"cardiac", 7, 3, 3}},
+    {"trauma",  {"trauma",  5, 2, 2}},
+    {"stroke",  {"stroke",  6, 3, 3}},
+    {"burn",    {"burn",    8, 2, 1}},
+    {"accident",{"accident",5, 2, 2}},
+    {"other",   {"other",   3, 1, 0}}
 };
 
 struct Patient {
     string id;
     string injury_type;
     int severity;
-    int days_admitted;
-    int healing_duration;
-    int resource_weight;
-    int effective_severity;
-    string previous_ward; // track if patient was in ICU before
+    string ward;
+    int effective_severity; // profit for knapsack
+    int resource_weight;    // weight for knapsack
 };
 
-// Hardcoded injury type table
-map<string, InjuryType> getInjuryTypes() {
-    map<string, InjuryType> types;
-    types["cardiac"]  = {"cardiac",  7,  3, 2};
-    types["stroke"]   = {"stroke",   10, 3, 2};
-    types["trauma"]   = {"trauma",   5,  2, 1};
-    types["accident"] = {"accident", 6,  2, 1};
-    types["other"]    = {"other",    3,  1, 0};
-    return types;
-}
-
 int main() {
-    // Read resource_capacity
-    int resource_capacity;
-    cin >> resource_capacity;
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
 
-    // Read number of patients
-    int n;
-    cin >> n;
-    cin.ignore(); // consume newline
+    string capLine;
+    if (!getline(cin, capLine)) {
+        cout << "{\"error\":\"no input\"}";
+        return 1;
+    }
 
-    vector<Patient> patients(n);
-    map<string, InjuryType> injuryTypes = getInjuryTypes();
+    int capacity = atoi(capLine.c_str());
+    if (capacity <= 0) capacity = 16;
 
-    for (int i = 0; i < n; i++) {
-        string line;
-        getline(cin, line);
-        
-        istringstream iss(line);
-        string patient_id, injury_type, sev_str, days_str, heal_str;
-        
-        getline(iss, patient_id, '\t');
-        getline(iss, injury_type, '\t');
-        getline(iss, sev_str, '\t');
-        getline(iss, days_str, '\t');
-        getline(iss, heal_str, '\t');
+    // Read patients
+    vector<Patient> patients;
+    string line;
+    while (getline(cin, line)) {
+        if (line.empty()) continue;
 
-        patients[i].id = patient_id;
-        patients[i].injury_type = injury_type;
-        patients[i].severity = stoi(sev_str);
-        patients[i].days_admitted = stoi(days_str);
-        patients[i].healing_duration = stoi(heal_str);
+        stringstream ss(line);
+        string id, injury, sevStr, ward;
+        getline(ss, id, '\t');
+        getline(ss, injury, '\t');
+        getline(ss, sevStr, '\t');
+        getline(ss, ward, '\t');
 
-        // Get resource weight from injury type table
-        if (injuryTypes.count(injury_type)) {
-            patients[i].resource_weight = injuryTypes[injury_type].resource_weight;
-        } else {
-            patients[i].resource_weight = 1;
+        int severity = atoi(sevStr.c_str());
+
+        // Look up injury type for bonus and weight
+        int bonus = 0, weight = 1;
+        if (injuryTypes.count(injury)) {
+            bonus = injuryTypes[injury].severity_bonus;
+            weight = injuryTypes[injury].resource_weight;
         }
 
-        // Compute effective severity (profit for knapsack)
-        // Higher severity = higher priority for ICU
-        // Patients who have been admitted longer than healing_duration have reduced severity
-        int eff = patients[i].severity;
-        if (patients[i].days_admitted >= patients[i].healing_duration) {
-            eff = max(1, eff - 3);
-        }
-        // Add injury type bonus
-        if (injuryTypes.count(injury_type)) {
-            eff += injuryTypes[injury_type].initial_severity_bonus;
-        }
-        patients[i].effective_severity = eff;
+        int effective = min(10, severity + bonus);
+        patients.push_back({id, injury, severity, ward, effective, weight});
+    }
+
+    int n = patients.size();
+    if (n == 0) {
+        cout << "{\"icu_admitted\":[],\"general_ward\":[],\"dp_table_snapshot\":[]}";
+        return 0;
     }
 
     // 0/1 Knapsack DP
-    // Items = patients, weight = resource_weight, profit = effective_severity
-    // Capacity = resource_capacity
-    int W = resource_capacity;
-
-    // dp[i][w] = max severity with first i patients and w resource units
-    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+    vector<vector<int>> dp(n + 1, vector<int>(capacity + 1, 0));
 
     for (int i = 1; i <= n; i++) {
-        for (int w = 0; w <= W; w++) {
+        for (int w = 0; w <= capacity; w++) {
             dp[i][w] = dp[i - 1][w];
             if (patients[i - 1].resource_weight <= w) {
-                int val = dp[i - 1][w - patients[i - 1].resource_weight] + patients[i - 1].effective_severity;
-                if (val > dp[i][w]) {
-                    dp[i][w] = val;
-                }
+                int takeIt = dp[i - 1][w - patients[i - 1].resource_weight] + patients[i - 1].effective_severity;
+                dp[i][w] = max(dp[i][w], takeIt);
             }
         }
     }
 
-    // Backtrack to find selected patients (ICU admitted)
-    vector<bool> selected(n, false);
-    int w = W;
+    // Backtrack: find which patients go to ICU
+    vector<bool> inICU(n, false);
+    int remaining = capacity;
     for (int i = n; i > 0; i--) {
-        if (dp[i][w] != dp[i - 1][w]) {
-            selected[i - 1] = true;
-            w -= patients[i - 1].resource_weight;
+        if (dp[i][remaining] != dp[i - 1][remaining]) {
+            inICU[i - 1] = true;
+            remaining -= patients[i - 1].resource_weight;
         }
     }
 
-    // Categorize patients
-    vector<string> icu_admitted;
-    vector<string> general_ward;
-    vector<string> evicted_from_icu;
-
+    // Build output
+    cout << "{\"icu_admitted\":[";
+    bool first = true;
     for (int i = 0; i < n; i++) {
-        if (selected[i]) {
-            icu_admitted.push_back(patients[i].id);
-        } else {
-            general_ward.push_back(patients[i].id);
-            // Note: The server will determine evictions by comparing with previous ward assignments
-        }
+        if (!inICU[i]) continue;
+        if (!first) cout << ",";
+        cout << "{\"id\":\"" << patients[i].id
+             << "\",\"injury_type\":\"" << patients[i].injury_type
+             << "\",\"severity\":" << patients[i].severity
+             << ",\"effective_severity\":" << patients[i].effective_severity
+             << ",\"resource_weight\":" << patients[i].resource_weight << "}";
+        first = false;
     }
 
-    int total_severity = dp[n][W];
-
-    // Build JSON output
-    cout << "{" << endl;
-    
-    // icu_admitted
-    cout << "  \"icu_admitted\": [";
-    for (size_t i = 0; i < icu_admitted.size(); i++) {
-        cout << "\"" << icu_admitted[i] << "\"";
-        if (i < icu_admitted.size() - 1) cout << ", ";
+    cout << "],\"general_ward\":[";
+    first = true;
+    for (int i = 0; i < n; i++) {
+        if (inICU[i]) continue;
+        if (!first) cout << ",";
+        cout << "{\"id\":\"" << patients[i].id
+             << "\",\"injury_type\":\"" << patients[i].injury_type
+             << "\",\"severity\":" << patients[i].severity << "}";
+        first = false;
     }
-    cout << "]," << endl;
 
-    // general_ward
-    cout << "  \"general_ward\": [";
-    for (size_t i = 0; i < general_ward.size(); i++) {
-        cout << "\"" << general_ward[i] << "\"";
-        if (i < general_ward.size() - 1) cout << ", ";
-    }
-    cout << "]," << endl;
-
-    // evicted_from_icu (empty - server will compute this)
-    cout << "  \"evicted_from_icu\": []," << endl;
-
-    // total_severity_served
-    cout << "  \"total_severity_served\": " << total_severity << "," << endl;
-
-    // dp_table_snapshot - full DP table
-    cout << "  \"dp_table_snapshot\": [" << endl;
-    for (int i = 0; i <= n; i++) {
-        cout << "    [";
-        for (int j = 0; j <= W; j++) {
-            cout << dp[i][j];
-            if (j < W) cout << ",";
+    // DP table snapshot (first 5 rows for display)
+    cout << "],\"dp_table_snapshot\":[";
+    int showRows = min(n, 5);
+    for (int i = 0; i <= showRows; i++) {
+        if (i > 0) cout << ",";
+        cout << "[";
+        int showCols = min(capacity, 10);
+        for (int w = 0; w <= showCols; w++) {
+            if (w > 0) cout << ",";
+            cout << dp[i][w];
         }
         cout << "]";
-        if (i < n) cout << ",";
-        cout << endl;
     }
-    cout << "  ]" << endl;
-
-    cout << "}" << endl;
+    cout << "]}";
 
     return 0;
 }

@@ -1,216 +1,173 @@
 /*
- * dijkstra.cpp — Dijkstra's Shortest Path Algorithm (C++ Binary)
+ * dijkstra.cpp — Dijkstra's Shortest Path Algorithm
  *
- * Computes shortest paths from a source node to all other nodes in a weighted graph.
+ * Computes shortest paths from a source node to all nodes in a weighted graph.
  * Used for: ambulance routing, police station routing, fire station routing.
  *
- * Input (stdin):  Tab-separated edge list: source\tdest\tweight (one per line)
- *                 Last line: "SOURCE\t<source_node_id>"
- * Output (stdout): JSON with distances, previous nodes, and step-by-step trace
+ * Input (stdin):  Line 1: mode ("single" or "all")
+ *                 Line 2: start node id
+ *                 Line 3: target node id
+ *                 Line 4: edge count
+ *                 Lines 5+: from\tto\tweight (tab-separated)
+ * Output (stdout): JSON with path/distances
  *
- * Algorithm: Standard Dijkstra with min-heap priority queue — O(E log V)
+ * Algorithm: Dijkstra with min-heap priority queue — O(E log V)
  * Compiled to: server/bin/native_dijkstra.exe
  */
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <queue>
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
-#include <iostream>
-#include <limits>
-#include <map>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#include <climits>
 
+using namespace std;
+
+// Edge in the graph
 struct Edge {
-    std::string to;
+    string to;
     double weight;
 };
 
-static std::string escapeJson(const std::string& value) {
-    std::string escaped;
-    for (size_t i = 0; i < value.size(); ++i) {
-        const char ch = value[i];
-        if (ch == '\\' || ch == '"') {
-            escaped.push_back('\\');
-        }
-        escaped.push_back(ch);
-    }
-    return escaped;
-}
-
-static std::vector<std::string> splitTab(const std::string& line) {
-    std::vector<std::string> parts;
-    std::stringstream ss(line);
-    std::string part;
-    while (std::getline(ss, part, '\t')) {
-        parts.push_back(part);
-    }
-    return parts;
-}
-
-static std::string toRoundedString(double value) {
-    std::ostringstream out;
-    out << std::fixed << std::setprecision(1) << (std::round(value * 10.0) / 10.0);
-    return out.str();
-}
-
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(NULL);
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
 
-    std::string mode;
-    std::string start;
-    std::string target;
-    std::string countLine;
-
-    if (!std::getline(std::cin, mode) ||
-        !std::getline(std::cin, start) ||
-        !std::getline(std::cin, target) ||
-        !std::getline(std::cin, countLine)) {
-        std::cout << "{\"error\":\"invalid input\"}";
+    // Read mode, start, target, edge count
+    string mode, start, target, countLine;
+    if (!getline(cin, mode) || !getline(cin, start) ||
+        !getline(cin, target) || !getline(cin, countLine)) {
+        cout << "{\"error\":\"invalid input\"}";
         return 1;
     }
 
-    int edgeCount = std::atoi(countLine.c_str());
-    std::unordered_map<std::string, std::vector<Edge> > graph;
-    std::vector<std::string> nodeOrder;
-    std::unordered_map<std::string, bool> seen;
+    int edgeCount = atoi(countLine.c_str());
 
-    for (int i = 0; i < edgeCount; ++i) {
-        std::string line;
-        if (!std::getline(std::cin, line)) {
-            std::cout << "{\"error\":\"missing edge data\"}";
-            return 1;
-        }
+    // Build adjacency list graph
+    map<string, vector<Edge>> graph;
+    vector<string> nodeOrder;
+    map<string, bool> seen;
 
-        std::vector<std::string> parts = splitTab(line);
-        if (parts.size() < 3) {
-            continue;
-        }
+    for (int i = 0; i < edgeCount; i++) {
+        string line;
+        if (!getline(cin, line)) break;
 
-        const std::string& from = parts[0];
-        const std::string& to = parts[1];
-        const double weight = std::atof(parts[2].c_str());
+        // Parse tab-separated: from \t to \t weight
+        stringstream ss(line);
+        string from, to, wStr;
+        getline(ss, from, '\t');
+        getline(ss, to, '\t');
+        getline(ss, wStr, '\t');
 
-        graph[from].push_back(Edge{to, weight});
-        graph[to].push_back(Edge{from, weight});
+        double w = atof(wStr.c_str());
 
-        if (!seen[from]) {
-            nodeOrder.push_back(from);
-            seen[from] = true;
-        }
-        if (!seen[to]) {
-            nodeOrder.push_back(to);
-            seen[to] = true;
-        }
+        // Undirected graph — add both directions
+        graph[from].push_back({to, w});
+        graph[to].push_back({from, w});
+
+        if (!seen[from]) { nodeOrder.push_back(from); seen[from] = true; }
+        if (!seen[to])   { nodeOrder.push_back(to);   seen[to] = true;   }
     }
 
     if (!seen[start]) {
-        std::cout << "{\"error\":\"start node not found\"}";
+        cout << "{\"error\":\"start node not found\"}";
         return 1;
     }
 
-    std::unordered_map<std::string, double> dist;
-    std::unordered_map<std::string, std::string> prev;
-    for (size_t i = 0; i < nodeOrder.size(); ++i) {
-        dist[nodeOrder[i]] = std::numeric_limits<double>::infinity();
+    // Initialize distances to infinity
+    map<string, double> dist;
+    map<string, string> prev;
+    for (int i = 0; i < nodeOrder.size(); i++) {
+        dist[nodeOrder[i]] = 1e18;
         prev[nodeOrder[i]] = "";
     }
-
-    typedef std::pair<double, std::string> HeapItem;
-    std::priority_queue<HeapItem, std::vector<HeapItem>, std::greater<HeapItem> > pq;
-
     dist[start] = 0.0;
-    pq.push(std::make_pair(0.0, start));
 
+    // Min-heap: (distance, node)
+    priority_queue<pair<double, string>, vector<pair<double, string>>, greater<pair<double, string>>> pq;
+    pq.push({0.0, start});
+
+    // Dijkstra's algorithm
     while (!pq.empty()) {
-        HeapItem item = pq.top();
+        double d = pq.top().first;
+        string u = pq.top().second;
         pq.pop();
 
-        const double currentDist = item.first;
-        const std::string current = item.second;
+        // Skip if we already found a shorter path
+        if (d > dist[u]) continue;
 
-        if (currentDist > dist[current]) {
-            continue;
-        }
+        // Early exit for single-target mode
+        if (mode == "single" && u == target) break;
 
-        if (mode == "single" && current == target) {
-            break;
-        }
-
-        const std::vector<Edge>& neighbors = graph[current];
-        for (size_t i = 0; i < neighbors.size(); ++i) {
-            const Edge& edge = neighbors[i];
-            const double nextDist = currentDist + edge.weight;
-            if (nextDist < dist[edge.to]) {
-                dist[edge.to] = nextDist;
-                prev[edge.to] = current;
-                pq.push(std::make_pair(nextDist, edge.to));
+        // Relax all neighbors
+        for (int i = 0; i < graph[u].size(); i++) {
+            string v = graph[u][i].to;
+            double newDist = d + graph[u][i].weight;
+            if (newDist < dist[v]) {
+                dist[v] = newDist;
+                prev[v] = u;
+                pq.push({newDist, v});
             }
         }
     }
 
+    // Output JSON based on mode
     if (mode == "single") {
-        if (!seen[target] || !std::isfinite(dist[target])) {
-            std::cout << "{\"path\":[],\"total_distance\":-1}";
+        // Reconstruct shortest path from start to target
+        if (!seen[target] || dist[target] >= 1e17) {
+            cout << "{\"path\":[],\"total_distance\":-1}";
             return 0;
         }
 
-        std::vector<std::string> path;
-        std::string cursor = target;
-        while (!cursor.empty()) {
-            path.push_back(cursor);
-            cursor = prev[cursor];
+        vector<string> path;
+        string cur = target;
+        while (cur != "") {
+            path.push_back(cur);
+            cur = prev[cur];
         }
-        std::reverse(path.begin(), path.end());
+        reverse(path.begin(), path.end());
 
-        if (path.empty() || path.front() != start) {
-            std::cout << "{\"path\":[],\"total_distance\":-1}";
+        if (path.empty() || path[0] != start) {
+            cout << "{\"path\":[],\"total_distance\":-1}";
             return 0;
         }
 
-        std::cout << "{\"path\":[";
-        for (size_t i = 0; i < path.size(); ++i) {
-            if (i > 0) {
-                std::cout << ",";
-            }
-            std::cout << "\"" << escapeJson(path[i]) << "\"";
+        // Print path array
+        cout << "{\"path\":[";
+        for (int i = 0; i < path.size(); i++) {
+            if (i > 0) cout << ",";
+            cout << "\"" << path[i] << "\"";
         }
-        std::cout << "],\"total_distance\":" << toRoundedString(dist[target]) << "}";
-        return 0;
-    }
+        cout << fixed << setprecision(1);
+        cout << "],\"total_distance\":" << dist[target] << "}";
+    } else {
+        // Print all distances
+        cout << fixed << setprecision(1);
+        cout << "{\"distances\":{";
+        for (int i = 0; i < nodeOrder.size(); i++) {
+            if (i > 0) cout << ",";
+            cout << "\"" << nodeOrder[i] << "\":";
+            if (dist[nodeOrder[i]] < 1e17)
+                cout << dist[nodeOrder[i]];
+            else
+                cout << "null";
+        }
 
-    std::cout << "{\"distances\":{";
-    for (size_t i = 0; i < nodeOrder.size(); ++i) {
-        if (i > 0) {
-            std::cout << ",";
+        // Print previous nodes for path reconstruction
+        cout << "},\"prev\":{";
+        bool first = true;
+        for (int i = 0; i < nodeOrder.size(); i++) {
+            if (prev[nodeOrder[i]] == "") continue;
+            if (!first) cout << ",";
+            cout << "\"" << nodeOrder[i] << "\":\"" << prev[nodeOrder[i]] << "\"";
+            first = false;
         }
-        const std::string& node = nodeOrder[i];
-        std::cout << "\"" << escapeJson(node) << "\":";
-        if (std::isfinite(dist[node])) {
-            std::cout << toRoundedString(dist[node]);
-        } else {
-            std::cout << "null";
-        }
+        cout << "}}";
     }
-
-    std::cout << "},\"prev\":{";
-    bool firstPrev = true;
-    for (size_t i = 0; i < nodeOrder.size(); ++i) {
-        const std::string& node = nodeOrder[i];
-        if (prev[node].empty()) {
-            continue;
-        }
-        if (!firstPrev) {
-            std::cout << ",";
-        }
-        std::cout << "\"" << escapeJson(node) << "\":\"" << escapeJson(prev[node]) << "\"";
-        firstPrev = false;
-    }
-    std::cout << "}}";
 
     return 0;
 }
