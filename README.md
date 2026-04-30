@@ -1,131 +1,115 @@
-🚑 **Smart City Emergency Management System**
+# NEXUS 🏙️
+A Smart City Emergency Management System that simulates real-time emergency dispatch across Pune's Kothrud area using classical DAA algorithms.
 
-An AI-powered emergency response system designed to optimize resource allocation, reduce response time, and improve decision-making during critical situations in urban environments.
+## Features
+- 🚑 **Ambulance Dispatch** - Dijkstra-powered shortest path routing with 0/1 Knapsack-based ICU bed allocation
+- 🚔 **Police Dispatch** - Crime priority queue using max-heap with SLA breach tracking
+- 🔥 **Fire Response** - Resource-optimal unit dispatching across fire stations
+- 📊 **Hospital Dashboard** - Live ICU/general ward bed status with patient lifecycle simulation
+- 🗺️ **Interactive Map** - Custom SVG of Pune's Kothrud area with real location nodes and road edges
+- ⚙️ **C++ Algorithm Core** - All DAA logic runs in compiled C++ binaries bridged via Node.js
 
-📌** Overview**
+## Tech Stack
+- **Frontend**: React 19 + Vite + Tailwind CSS + Three.js (particle animations)
+- **Backend**: Node.js + Express (port 3001)
+- **Database**: Local JSONL file-based system via Node.js `fs` module
+- **Algorithms**: C++ binaries (Dijkstra, 0/1 Knapsack, Priority Queue, Sorting)
+- **Map**: Custom SVG — Kothrud, Pune
 
-The Smart City Emergency Management System is built to simulate and manage emergency scenarios such as accidents, medical crises, and disasters in a smart city setup.
+## Algorithms Implemented
+| Algorithm | Module | Purpose |
+|---|---|---|
+| Dijkstra's Shortest Path | All services | Optimal route from station to incident |
+| 0/1 Knapsack (DP) | Ambulance / Hospital | ICU bed allocation by injury type & severity |
+| Max-Heap Priority Queue | Police | Crime priority scoring with time-bonus |
+| Merge / Quick Sort | All | Unit ranking by availability and proximity |
 
-The system uses intelligent algorithms to:
+## Setup
 
-Prioritize emergencies based on severity
-Allocate resources efficiently (ambulances, hospitals, responders)
-Optimize response time
-Simulate real-world emergency handling
+### 1. Clone the repository
+```bash
+git clone https://github.com/soham-arch/Smart-City-Management.git
+cd Smart-City-Management
+git checkout v2
+```
 
-This project demonstrates how AI + algorithms can enhance public safety infrastructure.
-
-🎯 **Objectives**
-Reduce emergency response time
-Optimize allocation of limited resources
-Improve decision-making using AI logic
-Simulate real-time emergency scenarios
-Provide a scalable model for smart cities
-
-⚙️** Features**
-🚨 Emergency Case Generation (Cardiac, Stroke, Trauma, Accident)
-🧠 Severity-based Priority Handling
-🏥 Resource Allocation System
-📊 Simulation of Emergency Flow
-⏱ Healing Time & Recovery Tracking
-⚖️ Weighted Resource Distribution Logic
-🧠 Core Concepts & Algorithms Used
-1. Priority-Based Scheduling
-
-Each emergency case is assigned a severity score, which determines the priority of handling.
-
-2. Resource Allocation Algorithm
-
-Resources (like ambulances, hospital beds) are assigned based on:
-
-Severity
-Resource weight
-Availability
-
-3. Healing Time Modeling
-
-Each injury type has predefined:
-
-Healing days
-Resource requirements
-const INJURY_TYPES = {
-  cardiac:  { healing_days: 7, resource_weight: 1, initial_severity_bonus: 1 },
-  stroke:   { healing_days: 10, resource_weight: 1, initial_severity_bonus: 1 },
-  trauma:   { healing_days: 5, resource_weight: 1, initial_severity_bonus: 1 },
-  accident: { healing_days: 6, resource_weight: 1, initial_severity_bonus: 1 }
-};
-
-4. AI-Based Decision Logic
-
-The system mimics intelligent decision-making by:
-
-Evaluating case urgency
-Dynamically assigning resources
-Updating status based on time progression
-
-🏗️ **System Architecture**
-User Input / Emergency Event
-          ↓
-Emergency Classification
-          ↓
-Severity Calculation
-          ↓
-Priority Queue System
-          ↓
-Resource Allocation Engine
-          ↓
-Response & Recovery Simulation
-
-💻** Tech Stack**
-Frontend: (if applicable — React / HTML / CSS)
-Backend: Node.js / JavaScript
-Algorithms: Custom Priority + Resource Allocation Logic
-Tools: Git, GitHub
-
-🚀** How to Run the Project**
-# Clone the repository
-git clone https://github.com/your-username/smart-city-emergency-system.git
-
-# Navigate to the project folder
-cd smart-city-emergency-system
-
-# Install dependencies
+### 2. Install dependencies
+```bash
+# Backend
+cd server
 npm install
 
-# Run the project
-npm start
+# Frontend
+cd ../client
+npm install
+```
 
-📊 **Use Cases**
-Smart city infrastructure planning
-Emergency response optimization systems
-Disaster management simulations
-AI-based logistics systems
+### 3. Compile C++ binaries
+```bash
+cd server/algorithms
 
-🔮** Future Scope**
-Integration with IoT devices (real-time data)
-GPS-based ambulance tracking
-Machine Learning for predictive emergencies
-Real-time dashboard & analytics
-Mobile app integration
+g++ -O2 -o dijkstra dijkstra.cpp
+g++ -O2 -o ward_knapsack ward_knapsack.cpp
+g++ -O2 -o crime_priority_queue crime_priority_queue.cpp
+```
 
-🤝** Contributors**
-Soham Patil
-Renuka Kulkarni
+### 4. Configure environment variables
 
-📄 **License**
+**Server** (`server/.env`):
+```env
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+```
 
-This project is licensed under the MIT License.
+> No external API keys required — the system runs fully offline with local file storage.
 
-⭐ **Acknowledgements**
-Inspired by real-world smart city initiatives
-Built as part of an academic / innovation project
-📬 Contact
+### 5. Run the application
+```bash
+# Terminal 1 - Backend
+cd server
+npm run dev
 
-For queries or collaboration:
+# Terminal 2 - Frontend
+cd client
+npm run dev
+```
 
-GitHub: https://github.com/soham-arch
-Email: psoham2006@gmail.com
+Open [http://localhost:5173](http://localhost:5173)
 
-⭐** Support**
+## Project Structure
+```
+Smart-City-Management/
+├── client/                  # React + Vite frontend
+│   ├── src/
+│   │   ├── pages/           # AmbulancePage, PolicePage, FirePage, HospitalPage
+│   │   ├── components/      # Map SVG, dispatch panels, algorithm visualizers
+│   │   └── hooks/           # usePolling, useDispatch
+├── server/                  # Node.js + Express backend
+│   ├── algorithms/          # C++ source files + compiled binaries
+│   ├── db/                  # JSONL file-based database (incidents, hospitals, units)
+│   └── routes/              # REST API endpoints per emergency service
+```
 
-If you like this project, give it a ⭐ on GitHub!
+## How It Works
+
+1. **Incident Reported** — User selects an incident location on the Kothrud SVG map
+2. **Dijkstra Runs** — C++ binary finds the shortest path from nearest available unit
+3. **Resources Allocated** — Knapsack DP assigns ICU beds (ambulance) or heap scores priority (police)
+4. **Dispatch Visualized** — Step-by-step animation shows algorithm execution in the UI
+5. **State Persisted** — Incident and bed status written to local JSONL files
+
+## DAA Course Alignment
+
+This project was built as part of a Design and Analysis of Algorithms (DAA) course. Every algorithm is implemented from scratch in C++ and directly drives the simulation logic — not used as a black box.
+
+- Dijkstra: `O((V + E) log V)` with binary heap
+- 0/1 Knapsack: `O(n × W)` DP table, displayed step-by-step in UI
+- Max-Heap: custom implementation, not STL `priority_queue`
+- Sorting: merge sort for unit ranking, quick sort for incident history
+
+## Disclaimer
+
+NEXUS is an academic simulation project. It does not represent real emergency infrastructure and should not be used for actual emergency response.
+
+## License
+MIT
